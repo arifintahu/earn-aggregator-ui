@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { EarnProduct, ExchangeYieldResult } from '@/types';
+import { EXCHANGE_ICONS } from '@/constants';
 import { calculateEffectiveYield, calculateOptimalAllocation, getMaxApr, formatAPR, formatUSD, capitalizeExchange } from '@/lib/calculations';
 
 interface YieldSimulatorProps {
@@ -144,9 +145,17 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                                     className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
-                                            {alloc.exchange.charAt(0).toUpperCase()}
-                                        </div>
+                                        {EXCHANGE_ICONS[alloc.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                                            <img
+                                                src={EXCHANGE_ICONS[alloc.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                                alt={alloc.exchange}
+                                                className="w-8 h-8 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
+                                                {alloc.exchange.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
                                         <div>
                                             <p className="font-medium text-sm">{capitalizeExchange(alloc.exchange)}</p>
                                             <div className="flex items-center gap-2">
@@ -203,9 +212,17 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="text-sm text-gray-500 w-6">#{index + 1}</span>
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
-                                            {result.exchange.charAt(0).toUpperCase()}
-                                        </div>
+                                        {EXCHANGE_ICONS[result.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                                            <img
+                                                src={EXCHANGE_ICONS[result.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                                alt={result.exchange}
+                                                className="w-8 h-8 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
+                                                {result.exchange.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
                                         <div>
                                             <p className="font-medium">{capitalizeExchange(result.exchange)}</p>
                                             <p className={`text-xs ${result.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'

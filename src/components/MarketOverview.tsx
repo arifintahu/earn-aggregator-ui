@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { EarnProduct } from '@/types';
 import { getMaxApr, formatAPR, getRelativeTime, capitalizeExchange } from '@/lib/calculations';
 import { usePortfolio } from '@/context/PortfolioContext';
+import { EXCHANGE_ICONS } from '@/constants';
 import AddToPortfolioModal from './AddToPortfolioModal';
 import TierBreakdown from './TierBreakdown';
 
@@ -132,8 +133,8 @@ export default function MarketOverview({ products, loading, error }: MarketOverv
                                     key={asset}
                                     onClick={() => setAssetFilter(asset)}
                                     className={`px-4 py-2 text-sm font-medium transition-colors ${assetFilter === asset
-                                            ? 'bg-crypto-green/20 text-crypto-green'
-                                            : 'bg-transparent text-gray-400 hover:text-white hover:bg-white/5'
+                                        ? 'bg-crypto-green/20 text-crypto-green'
+                                        : 'bg-transparent text-gray-400 hover:text-white hover:bg-white/5'
                                         }`}
                                 >
                                     {asset}
@@ -192,16 +193,24 @@ export default function MarketOverview({ products, loading, error }: MarketOverv
                                 >
                                     <td className="py-4 px-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
-                                                {product.name.charAt(0).toUpperCase()}
-                                            </div>
+                                            {EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                                                <img
+                                                    src={EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                                    alt={product.name}
+                                                    className="w-8 h-8 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
+                                                    {product.name.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
                                             <span className="font-medium">{capitalizeExchange(product.name)}</span>
                                         </div>
                                     </td>
                                     <td className="py-4 px-4">
                                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${product.asset === 'USDT'
-                                                ? 'bg-emerald-500/20 text-emerald-400'
-                                                : 'bg-blue-500/20 text-blue-400'
+                                            ? 'bg-emerald-500/20 text-emerald-400'
+                                            : 'bg-blue-500/20 text-blue-400'
                                             }`}>
                                             {product.asset}
                                         </span>

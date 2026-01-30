@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { EarnProduct, PortfolioPosition } from '@/types';
 import { usePortfolio } from '@/context/PortfolioContext';
+import { EXCHANGE_ICONS } from '@/constants';
 import {
     calculatePortfolioMetrics,
     formatAPR,
@@ -113,9 +114,17 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                                 className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-lg font-bold text-crypto-green">
-                                        {position.exchange.charAt(0).toUpperCase()}
-                                    </div>
+                                    {EXCHANGE_ICONS[position.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                                        <img
+                                            src={EXCHANGE_ICONS[position.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                            alt={position.exchange}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-lg font-bold text-crypto-green">
+                                            {position.exchange.charAt(0).toUpperCase()}
+                                        </div>
+                                    )}
                                     <div>
                                         <p className="font-medium">{capitalizeExchange(position.exchange)}</p>
                                         <div className="flex items-center gap-2">

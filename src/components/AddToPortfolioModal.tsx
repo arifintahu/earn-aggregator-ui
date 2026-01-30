@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { EarnProduct } from '@/types';
 import { usePortfolio } from '@/context/PortfolioContext';
 import { capitalizeExchange } from '@/lib/calculations';
+import { EXCHANGE_ICONS } from '@/constants';
 
 interface AddToPortfolioModalProps {
     product: EarnProduct;
@@ -52,9 +53,17 @@ export default function AddToPortfolioModal({ product, onClose }: AddToPortfolio
 
                 <div className="mb-6">
                     <div className="flex items-center gap-3 p-4 rounded-lg bg-white/5">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-lg font-bold text-crypto-green">
-                            {product.name.charAt(0).toUpperCase()}
-                        </div>
+                        {EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                            <img
+                                src={EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                alt={product.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-lg font-bold text-crypto-green">
+                                {product.name.charAt(0).toUpperCase()}
+                            </div>
+                        )}
                         <div>
                             <p className="font-medium">{capitalizeExchange(product.name)}</p>
                             <p className={`text-sm ${product.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
