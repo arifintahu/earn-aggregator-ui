@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { EarnProduct, ExchangeYieldResult } from '@/types';
-import { calculateEffectiveYield, getMaxApr, formatAPR, formatUSD, capitalizeExchange } from '@/lib/calculations';
+import { calculateEffectiveYield, calculateOptimalAllocation, getMaxApr, formatAPR, formatUSD, capitalizeExchange } from '@/lib/calculations';
 
 interface YieldSimulatorProps {
     products: EarnProduct[];
@@ -10,9 +10,17 @@ interface YieldSimulatorProps {
 
 export default function YieldSimulator({ products }: YieldSimulatorProps) {
     const [amount, setAmount] = useState<string>('1000');
+    const [showAllOptions, setShowAllOptions] = useState(false);
 
-    const results = useMemo(() => {
-        const numAmount = parseFloat(amount) || 0;
+    const numAmount = parseFloat(amount) || 0;
+
+    // Calculate optimal allocation across all exchanges
+    const optimalAllocation = useMemo(() => {
+        return calculateOptimalAllocation(numAmount, products);
+    }, [numAmount, products]);
+
+    // Single exchange results for comparison
+    const singleExchangeResults = useMemo(() => {
         if (numAmount <= 0) return [];
 
         const calculated: ExchangeYieldResult[] = products.map(product => {
@@ -25,13 +33,10 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
             };
         });
 
-        // Sort by effective APR descending
         return calculated.sort((a, b) => b.effectiveApr - a.effectiveApr);
-    }, [amount, products]);
+    }, [numAmount, products]);
 
-    const bestResult = results[0];
-
-    const numAmount = parseFloat(amount) || 0;
+    const bestSingleResult = singleExchangeResults[0];
 
     return (
         <div className="glass-card p-6">
@@ -77,91 +82,150 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                 </div>
             </div>
 
-            {/* Best Result Highlight */}
-            {bestResult && numAmount > 0 && (
+            {/* Optimal Strategy Section */}
+            {numAmount > 0 && optimalAllocation.allocations.length > 0 && (
                 <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-crypto-green/20 to-transparent border border-crypto-green/30">
                     <div className="flex items-center gap-2 mb-3">
                         <svg className="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                         </svg>
-                        <span className="text-sm font-medium text-gray-300">Best Option</span>
+                        <span className="text-sm font-medium text-gray-300">Optimal Strategy</span>
+                        <span className="text-xs text-gray-500 ml-auto">
+                            Split across {optimalAllocation.allocations.length} tier{optimalAllocation.allocations.length > 1 ? 's' : ''}
+                        </span>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-xl font-bold text-crypto-green">
-                                {bestResult.exchange.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <p className="font-semibold text-lg">{capitalizeExchange(bestResult.exchange)}</p>
-                                <p className={`text-sm ${bestResult.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
-                                    }`}>
-                                    {bestResult.asset}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <p className="text-2xl font-bold text-crypto-green">
-                                {formatAPR(bestResult.effectiveApr)}%
+                    {/* Combined Stats */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <p className="text-sm text-gray-400">Combined Effective APR</p>
+                            <p className="text-3xl font-bold text-crypto-green">
+                                {formatAPR(optimalAllocation.effectiveApr)}%
                             </p>
-                            <p className="text-sm text-gray-400">Effective APR</p>
                         </div>
+                        {bestSingleResult && (
+                            <div className="text-right">
+                                <p className="text-xs text-gray-500">vs Best Single Exchange</p>
+                                <p className="text-sm text-gray-400">
+                                    {capitalizeExchange(bestSingleResult.exchange)} {bestSingleResult.asset}: {formatAPR(bestSingleResult.effectiveApr)}%
+                                </p>
+                                {optimalAllocation.effectiveApr > bestSingleResult.effectiveApr && (
+                                    <p className="text-xs text-crypto-green">
+                                        +{formatAPR(optimalAllocation.effectiveApr - bestSingleResult.effectiveApr)}% better
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-white/10">
+                    {/* Rewards Summary */}
+                    <div className="grid grid-cols-3 gap-4 mb-4 pt-4 border-t border-white/10">
                         <div>
                             <p className="text-xs text-gray-400 mb-1">Daily Reward</p>
-                            <p className="font-semibold text-crypto-green">{formatUSD(bestResult.dailyReward)}</p>
+                            <p className="font-semibold text-crypto-green">{formatUSD(optimalAllocation.dailyReward)}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-400 mb-1">Monthly Reward</p>
-                            <p className="font-semibold text-crypto-green">{formatUSD(bestResult.monthlyReward)}</p>
+                            <p className="font-semibold text-crypto-green">{formatUSD(optimalAllocation.monthlyReward)}</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-400 mb-1">Annual Reward</p>
-                            <p className="font-semibold text-crypto-green">{formatUSD(bestResult.annualReturn)}</p>
+                            <p className="font-semibold text-crypto-green">{formatUSD(optimalAllocation.totalAnnualReturn)}</p>
+                        </div>
+                    </div>
+
+                    {/* Allocation Breakdown */}
+                    <div className="pt-4 border-t border-white/10">
+                        <p className="text-xs text-gray-400 mb-3">Allocation Breakdown</p>
+                        <div className="space-y-2">
+                            {optimalAllocation.allocations.map((alloc, index) => (
+                                <div
+                                    key={`${alloc.exchange}-${alloc.asset}-${alloc.tierType}-${index}`}
+                                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/5"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
+                                            {alloc.exchange.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-sm">{capitalizeExchange(alloc.exchange)}</p>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-xs ${alloc.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'}`}>
+                                                    {alloc.asset}
+                                                </span>
+                                                <span className={`text-xs px-1.5 py-0.5 rounded ${alloc.tierType === 'bonus'
+                                                    ? 'bg-yellow-500/20 text-yellow-400'
+                                                    : 'bg-gray-500/20 text-gray-400'
+                                                    }`}>
+                                                    {alloc.tierType}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">{formatUSD(alloc.amount)}</p>
+                                        <p className="text-xs text-crypto-green">{formatAPR(alloc.apr * 100)}% APR</p>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* All Results */}
-            {numAmount > 0 && results.length > 0 && (
+            {/* Toggle for Single Exchange Options */}
+            {numAmount > 0 && singleExchangeResults.length > 0 && (
                 <div>
-                    <h3 className="text-sm font-medium text-gray-400 mb-3">All Options (Ranked)</h3>
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-                        {results.map((result, index) => (
-                            <div
-                                key={`${result.exchange}-${result.asset}`}
-                                className={`flex items-center justify-between p-3 rounded-lg transition-colors ${index === 0
-                                    ? 'bg-crypto-green/10 border border-crypto-green/20'
-                                    : 'bg-white/5 hover:bg-white/10'
-                                    }`}
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm text-gray-500 w-6">#{index + 1}</span>
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
-                                        {result.exchange.charAt(0).toUpperCase()}
+                    <button
+                        onClick={() => setShowAllOptions(!showAllOptions)}
+                        className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-3"
+                    >
+                        <svg
+                            className={`w-4 h-4 transition-transform ${showAllOptions ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        Single Exchange Options (Ranked)
+                    </button>
+
+                    {showAllOptions && (
+                        <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
+                            {singleExchangeResults.map((result, index) => (
+                                <div
+                                    key={`${result.exchange}-${result.asset}`}
+                                    className={`flex items-center justify-between p-3 rounded-lg transition-colors ${index === 0
+                                        ? 'bg-crypto-green/10 border border-crypto-green/20'
+                                        : 'bg-white/5 hover:bg-white/10'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-sm text-gray-500 w-6">#{index + 1}</span>
+                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
+                                            {result.exchange.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium">{capitalizeExchange(result.exchange)}</p>
+                                            <p className={`text-xs ${result.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
+                                                }`}>
+                                                {result.asset}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="font-medium">{capitalizeExchange(result.exchange)}</p>
-                                        <p className={`text-xs ${result.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
-                                            }`}>
-                                            {result.asset}
+                                    <div className="text-right">
+                                        <p className="font-semibold text-crypto-green">
+                                            {formatAPR(result.effectiveApr)}%
+                                        </p>
+                                        <p className="text-xs text-gray-400">
+                                            {formatUSD(result.dailyReward)}/day
                                         </p>
                                     </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="font-semibold text-crypto-green">
-                                        {formatAPR(result.effectiveApr)}%
-                                    </p>
-                                    <p className="text-xs text-gray-400">
-                                        {formatUSD(result.dailyReward)}/day
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 

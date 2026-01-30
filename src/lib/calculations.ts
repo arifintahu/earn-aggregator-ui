@@ -1,4 +1,4 @@
-import { Subscription, YieldResult, EarnProduct, PortfolioPosition } from '@/types';
+import { Subscription, YieldResult, EarnProduct, PortfolioPosition, AllocationSlot, OptimalAllocation } from '@/types';
 
 /**
  * Calculate effective yield based on tiered APR structure
@@ -36,6 +36,90 @@ export function calculateEffectiveYield(amount: number, subscriptions: Subscript
     return {
         effectiveApr,
         annualReturn: totalAnnualReturn,
+        dailyReward,
+        monthlyReward,
+    };
+}
+
+/**
+ * Calculate optimal allocation across all exchanges/tiers to maximize returns
+ * Uses a greedy algorithm: fill highest-APR tiers first
+ */
+export function calculateOptimalAllocation(amount: number, products: EarnProduct[]): OptimalAllocation {
+    if (amount <= 0 || products.length === 0) {
+        return {
+            allocations: [],
+            totalAmount: 0,
+            totalAnnualReturn: 0,
+            effectiveApr: 0,
+            dailyReward: 0,
+            monthlyReward: 0,
+        };
+    }
+
+    // Build list of all tier slots from all products
+    interface TierSlot {
+        exchange: string;
+        asset: 'USDT' | 'USDC';
+        tierType: 'bonus' | 'base';
+        apr: number;
+        minAmount: number;
+        maxAmount: number; // Infinity for unlimited
+    }
+
+    const tierSlots: TierSlot[] = [];
+
+    for (const product of products) {
+        for (const sub of product.subscriptions) {
+            tierSlots.push({
+                exchange: product.name,
+                asset: product.asset,
+                tierType: sub.type,
+                apr: sub.apr,
+                minAmount: sub.tier.min,
+                maxAmount: sub.tier.max === -1 ? Infinity : sub.tier.max,
+            });
+        }
+    }
+
+    // Sort by APR descending (highest first)
+    tierSlots.sort((a, b) => b.apr - a.apr);
+
+    // Greedily fill each tier slot
+    let remainingAmount = amount;
+    const allocations: AllocationSlot[] = [];
+
+    for (const slot of tierSlots) {
+        if (remainingAmount <= 0) break;
+
+        const slotCapacity = slot.maxAmount - slot.minAmount;
+        const amountToAllocate = Math.min(remainingAmount, slotCapacity);
+
+        if (amountToAllocate > 0) {
+            allocations.push({
+                exchange: slot.exchange,
+                asset: slot.asset,
+                tierType: slot.tierType,
+                amount: amountToAllocate,
+                apr: slot.apr,
+                annualReturn: amountToAllocate * slot.apr,
+            });
+            remainingAmount -= amountToAllocate;
+        }
+    }
+
+    // Calculate totals
+    const totalAmount = allocations.reduce((sum, a) => sum + a.amount, 0);
+    const totalAnnualReturn = allocations.reduce((sum, a) => sum + a.annualReturn, 0);
+    const effectiveApr = totalAmount > 0 ? (totalAnnualReturn / totalAmount) * 100 : 0;
+    const dailyReward = totalAnnualReturn / 365;
+    const monthlyReward = totalAnnualReturn / 12;
+
+    return {
+        allocations,
+        totalAmount,
+        totalAnnualReturn,
+        effectiveApr,
         dailyReward,
         monthlyReward,
     };

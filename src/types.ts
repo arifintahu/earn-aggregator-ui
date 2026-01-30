@@ -39,3 +39,22 @@ export interface ExchangeYieldResult extends YieldResult {
   asset: string;
   maxApr: number;
 }
+
+// Multi-exchange allocation types
+export interface AllocationSlot {
+  exchange: string;
+  asset: 'USDT' | 'USDC';
+  tierType: 'bonus' | 'base';
+  amount: number;
+  apr: number;           // APR decimal (e.g., 0.18 for 18%)
+  annualReturn: number;  // amount * apr
+}
+
+export interface OptimalAllocation {
+  allocations: AllocationSlot[];
+  totalAmount: number;
+  totalAnnualReturn: number;
+  effectiveApr: number;   // percentage (e.g., 12.5 for 12.5%)
+  dailyReward: number;
+  monthlyReward: number;
+}
