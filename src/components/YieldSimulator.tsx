@@ -54,7 +54,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="Enter amount"
-                        className="input-field pl-8 text-xl font-semibold w-full"
+                        className="input-field pl-10 text-xl font-semibold w-full"
                         min="0"
                         step="100"
                     />
@@ -67,8 +67,8 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                             key={preset}
                             onClick={() => setAmount(preset.toString())}
                             className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${amount === preset.toString()
-                                    ? 'bg-crypto-green/20 text-crypto-green border border-crypto-green/30'
-                                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
+                                ? 'bg-crypto-green/20 text-crypto-green border border-crypto-green/30'
+                                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-transparent'
                                 }`}
                         >
                             ${preset.toLocaleString()}
@@ -134,8 +134,8 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                             <div
                                 key={`${result.exchange}-${result.asset}`}
                                 className={`flex items-center justify-between p-3 rounded-lg transition-colors ${index === 0
-                                        ? 'bg-crypto-green/10 border border-crypto-green/20'
-                                        : 'bg-white/5 hover:bg-white/10'
+                                    ? 'bg-crypto-green/10 border border-crypto-green/20'
+                                    : 'bg-white/5 hover:bg-white/10'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { EarnProduct } from '@/types';
 
-const API_URL = '/api/earn-products';
+const API_URL = `${process.env.NEXT_PUBLIC_EARN_API_HOST}/api/v1/earn-products`;
 
 interface UseEarnProductsResult {
     products: EarnProduct[];
