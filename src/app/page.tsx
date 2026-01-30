@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useMemo } from 'react';
 import { useEarnProducts } from '@/hooks/useEarnProducts';
 import { useApiHealth } from '@/hooks/useApiHealth';
 import MarketOverview from '@/components/MarketOverview';
@@ -9,6 +10,48 @@ import PortfolioTracker from '@/components/PortfolioTracker';
 export default function Home() {
   const { products, loading, error } = useEarnProducts();
   const apiHealth = useApiHealth();
+
+  // Track selected product keys for yield simulator (default: all selected)
+  const [selectedProductKeys, setSelectedProductKeys] = useState<Set<string>>(new Set());
+
+  // Generate a unique key for each product
+  const getProductKey = (product: { name: string; asset: string }) =>
+    `${product.name}-${product.asset}`;
+
+  // Initialize all products as selected when products load
+  useEffect(() => {
+    if (products.length > 0 && selectedProductKeys.size === 0) {
+      const allKeys = new Set(products.map(getProductKey));
+      setSelectedProductKeys(allKeys);
+    }
+  }, [products]);
+
+  // Toggle a single product's selection
+  const toggleProductSelection = (productKey: string) => {
+    setSelectedProductKeys(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productKey)) {
+        newSet.delete(productKey);
+      } else {
+        newSet.add(productKey);
+      }
+      return newSet;
+    });
+  };
+
+  // Select/Deselect all products
+  const toggleAllProducts = (selectAll: boolean) => {
+    if (selectAll) {
+      setSelectedProductKeys(new Set(products.map(getProductKey)));
+    } else {
+      setSelectedProductKeys(new Set());
+    }
+  };
+
+  // Filter products for yield simulator based on selection
+  const selectedProducts = useMemo(() => {
+    return products.filter(p => selectedProductKeys.has(getProductKey(p)));
+  }, [products, selectedProductKeys]);
 
   return (
     <div className="min-h-screen">
@@ -27,16 +70,16 @@ export default function Home() {
 
             <div className="flex items-center gap-2 text-sm">
               <div className={`w-2 h-2 rounded-full ${apiHealth.loading
-                  ? 'bg-yellow-400 animate-pulse'
-                  : apiHealth.healthy
-                    ? 'bg-crypto-green animate-pulse'
-                    : 'bg-red-400'
+                ? 'bg-yellow-400 animate-pulse'
+                : apiHealth.healthy
+                  ? 'bg-crypto-green animate-pulse'
+                  : 'bg-red-400'
                 }`}></div>
               <span className={`${apiHealth.loading
-                  ? 'text-yellow-400'
-                  : apiHealth.healthy
-                    ? 'text-gray-400'
-                    : 'text-red-400'
+                ? 'text-yellow-400'
+                : apiHealth.healthy
+                  ? 'text-gray-400'
+                  : 'text-red-400'
                 }`}>
                 {apiHealth.loading
                   ? 'Connecting...'
@@ -54,12 +97,20 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Market Overview - Full width on mobile, 2 cols on desktop */}
           <div className="lg:col-span-2">
-            <MarketOverview products={products} loading={loading} error={error} />
+            <MarketOverview
+              products={products}
+              loading={loading}
+              error={error}
+              selectedProductKeys={selectedProductKeys}
+              onToggleProduct={toggleProductSelection}
+              onToggleAll={toggleAllProducts}
+              getProductKey={getProductKey}
+            />
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            <YieldSimulator products={products} />
+            <YieldSimulator products={selectedProducts} />
             <PortfolioTracker products={products} />
           </div>
         </div>

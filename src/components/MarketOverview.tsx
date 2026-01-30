@@ -12,13 +12,17 @@ interface MarketOverviewProps {
     products: EarnProduct[];
     loading: boolean;
     error: string | null;
+    selectedProductKeys: Set<string>;
+    onToggleProduct: (productKey: string) => void;
+    onToggleAll: (selectAll: boolean) => void;
+    getProductKey: (product: { name: string; asset: string }) => string;
 }
 
 type AssetFilter = 'ALL' | 'USDT' | 'USDC';
 type SortBy = 'exchange' | 'apr';
 type SortOrder = 'asc' | 'desc';
 
-export default function MarketOverview({ products, loading, error }: MarketOverviewProps) {
+export default function MarketOverview({ products, loading, error, selectedProductKeys, onToggleProduct, onToggleAll, getProductKey }: MarketOverviewProps) {
     const [assetFilter, setAssetFilter] = useState<AssetFilter>('ALL');
     const [searchQuery, setSearchQuery] = useState('');
     const [sortBy, setSortBy] = useState<SortBy>('apr');
@@ -149,6 +153,17 @@ export default function MarketOverview({ products, loading, error }: MarketOverv
                     <table className="w-full">
                         <thead>
                             <tr className="border-b border-white/10">
+                                <th className="text-center py-3 px-2 text-sm font-medium text-gray-400 w-12">
+                                    <div className="flex items-center justify-center gap-1">
+                                        <input
+                                            type="checkbox"
+                                            checked={products.length > 0 && selectedProductKeys.size === products.length}
+                                            onChange={(e) => onToggleAll(e.target.checked)}
+                                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-crypto-green focus:ring-crypto-green focus:ring-offset-0 cursor-pointer accent-crypto-green"
+                                            title="Select all for Yield Simulator"
+                                        />
+                                    </div>
+                                </th>
                                 <th
                                     className="text-left py-3 px-4 text-sm font-medium text-gray-400 cursor-pointer hover:text-white transition-colors"
                                     onClick={() => handleSort('exchange')}
@@ -186,59 +201,72 @@ export default function MarketOverview({ products, loading, error }: MarketOverv
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredProducts.map((product, index) => (
-                                <tr
-                                    key={`${product.name}-${product.asset}`}
-                                    className="border-b border-white/5 hover:bg-white/5 transition-colors"
-                                >
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center gap-3">
-                                            {EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
-                                                <img
-                                                    src={EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
-                                                    alt={product.name}
-                                                    className="w-8 h-8 rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
-                                                    {product.name.charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
-                                            <span className="font-medium">{capitalizeExchange(product.name)}</span>
-                                        </div>
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${product.asset === 'USDT'
-                                            ? 'bg-emerald-500/20 text-emerald-400'
-                                            : 'bg-blue-500/20 text-blue-400'
-                                            }`}>
-                                            {product.asset}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        <span className="text-crypto-green font-semibold text-lg">
-                                            {formatAPR(getMaxApr(product.subscriptions))}%
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        <TierBreakdown subscriptions={product.subscriptions} />
-                                    </td>
-                                    <td className="py-4 px-4 text-sm text-gray-400">
-                                        {getRelativeTime(product.updatedAt)}
-                                    </td>
-                                    <td className="py-4 px-4 text-right">
-                                        <button
-                                            onClick={() => handleAddToPortfolio(product)}
-                                            className="btn-secondary text-sm"
-                                        >
-                                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            Add
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {filteredProducts.map((product, index) => {
+                                const productKey = getProductKey(product);
+                                const isSelected = selectedProductKeys.has(productKey);
+                                return (
+                                    <tr
+                                        key={productKey}
+                                        className={`border-b border-white/5 hover:bg-white/5 transition-colors ${!isSelected ? 'opacity-50' : ''}`}
+                                    >
+                                        <td className="py-4 px-2 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => onToggleProduct(productKey)}
+                                                className="w-4 h-4 rounded border-white/20 bg-white/5 text-crypto-green focus:ring-crypto-green focus:ring-offset-0 cursor-pointer accent-crypto-green"
+                                                title="Include in Yield Simulator"
+                                            />
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            <div className="flex items-center gap-3">
+                                                {EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                                                    <img
+                                                        src={EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                                        alt={product.name}
+                                                        className="w-8 h-8 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
+                                                        {product.name.charAt(0).toUpperCase()}
+                                                    </div>
+                                                )}
+                                                <span className="font-medium">{capitalizeExchange(product.name)}</span>
+                                            </div>
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${product.asset === 'USDT'
+                                                ? 'bg-emerald-500/20 text-emerald-400'
+                                                : 'bg-blue-500/20 text-blue-400'
+                                                }`}>
+                                                {product.asset}
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            <span className="text-crypto-green font-semibold text-lg">
+                                                {formatAPR(getMaxApr(product.subscriptions))}%
+                                            </span>
+                                        </td>
+                                        <td className="py-4 px-4">
+                                            <TierBreakdown subscriptions={product.subscriptions} />
+                                        </td>
+                                        <td className="py-4 px-4 text-sm text-gray-400">
+                                            {getRelativeTime(product.updatedAt)}
+                                        </td>
+                                        <td className="py-4 px-4 text-right">
+                                            <button
+                                                onClick={() => handleAddToPortfolio(product)}
+                                                className="btn-secondary text-sm"
+                                            >
+                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         </tbody>
                     </table>
                 </div>
