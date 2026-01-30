@@ -64,6 +64,10 @@ body {
 }
 
 /* Button Styles */
+button {
+  cursor: pointer;
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;
