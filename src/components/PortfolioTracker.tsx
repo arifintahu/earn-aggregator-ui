@@ -74,26 +74,26 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
 
             {/* Portfolio Metrics */}
             {positions.length > 0 && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
                         <p className="text-xs text-gray-400 mb-1">Total Balance</p>
-                        <p className="text-xl font-bold">{formatUSD(metrics.totalBalance)}</p>
+                        <p className="text-lg font-bold truncate">{formatUSD(metrics.totalBalance)}</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
                         <p className="text-xs text-gray-400 mb-1">Avg APR</p>
-                        <p className="text-xl font-bold text-crypto-green">
+                        <p className="text-lg font-bold text-crypto-green truncate">
                             {formatAPR(metrics.weightedAvgApr)}%
                         </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
                         <p className="text-xs text-gray-400 mb-1">Daily Income</p>
-                        <p className="text-xl font-bold text-crypto-green">
+                        <p className="text-lg font-bold text-crypto-green truncate">
                             {formatUSD(metrics.totalDailyIncome)}
                         </p>
                     </div>
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
+                    <div className="p-3 rounded-xl bg-gradient-to-br from-white/10 to-transparent border border-white/10">
                         <p className="text-xs text-gray-400 mb-1">Monthly Income</p>
-                        <p className="text-xl font-bold text-crypto-green">
+                        <p className="text-lg font-bold text-crypto-green truncate">
                             {formatUSD(metrics.totalMonthlyIncome)}
                         </p>
                     </div>
@@ -111,77 +111,79 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                         return (
                             <div
                                 key={position.id}
-                                className="flex items-center justify-between p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                                className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                             >
-                                <div className="flex items-center gap-3">
-                                    {EXCHANGE_ICONS[position.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
-                                        <img
-                                            src={EXCHANGE_ICONS[position.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
-                                            alt={position.exchange}
-                                            className="w-10 h-10 rounded-full object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-lg font-bold text-crypto-green">
-                                            {position.exchange.charAt(0).toUpperCase()}
-                                        </div>
-                                    )}
-                                    <div>
-                                        <p className="font-medium">{capitalizeExchange(position.exchange)}</p>
-                                        <div className="flex items-center gap-2">
-                                            <span className={`text-xs ${position.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
-                                                }`}>
+                                {/* Top row: Exchange info and amount */}
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        {EXCHANGE_ICONS[position.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
+                                            <img
+                                                src={EXCHANGE_ICONS[position.exchange.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
+                                                alt={position.exchange}
+                                                className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                                            />
+                                        ) : (
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green flex-shrink-0">
+                                                {position.exchange.charAt(0).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div className="min-w-0">
+                                            <p className="font-medium text-sm truncate">{capitalizeExchange(position.exchange)}</p>
+                                            <span className={`text-xs ${position.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'}`}>
                                                 {position.asset}
                                             </span>
-                                            {yield_ && (
-                                                <span className="text-xs text-gray-400">
-                                                    • {formatAPR(yield_.effectiveApr)}% effective
-                                                </span>
-                                            )}
                                         </div>
                                     </div>
+                                    {!isEditing && (
+                                        <div className="text-right flex-shrink-0">
+                                            <p className="font-semibold text-sm">{formatUSD(position.amount)}</p>
+                                        </div>
+                                    )}
                                 </div>
 
-                                <div className="flex items-center gap-4">
+                                {/* Bottom row: Stats and actions */}
+                                <div className="flex items-center justify-between">
                                     {isEditing ? (
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 w-full">
                                             <input
                                                 type="number"
                                                 value={editAmount}
                                                 onChange={(e) => setEditAmount(e.target.value)}
-                                                className="input-field w-24 text-sm py-1"
+                                                className="input-field flex-1 text-sm py-1 px-2"
                                                 autoFocus
                                             />
                                             <button
                                                 onClick={() => handleEditSave(position.id)}
-                                                className="text-crypto-green hover:text-crypto-green/80"
+                                                className="p-1.5 text-crypto-green hover:text-crypto-green/80"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </button>
                                             <button
                                                 onClick={handleEditCancel}
-                                                className="text-gray-400 hover:text-white"
+                                                className="p-1.5 text-gray-400 hover:text-white"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
                                         </div>
                                     ) : (
                                         <>
-                                            <div className="text-right">
-                                                <p className="font-semibold">{formatUSD(position.amount)}</p>
+                                            <div className="flex items-center gap-2 text-xs text-gray-400">
                                                 {yield_ && (
-                                                    <p className="text-xs text-crypto-green">
-                                                        +{formatUSD(yield_.dailyReward)}/day
-                                                    </p>
+                                                    <>
+                                                        <span className="text-crypto-green">{formatAPR(yield_.effectiveApr)}% APR</span>
+                                                        <span>•</span>
+                                                        <span className="text-crypto-green">+{formatUSD(yield_.dailyReward)}/day</span>
+                                                    </>
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-1">
                                                 <button
                                                     onClick={() => handleEditStart(position)}
-                                                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                                    className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -189,7 +191,7 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                                                 </button>
                                                 <button
                                                     onClick={() => removePosition(position.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                                                    className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
