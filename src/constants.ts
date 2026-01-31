@@ -3,4 +3,5 @@ export const EXCHANGE_ICONS = {
     'bybit': '/images/bybit.webp',
     'bitget': '/images/bitget.jpg',
     'mexc': '/images/mexc.webp',
+    'gate': '/images/gate.webp',
 }
