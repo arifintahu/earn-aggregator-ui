@@ -193,7 +193,23 @@ export default function MarketOverview({ products, loading, error, selectedProdu
                                     Tier Details
                                 </th>
                                 <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                                    Updated
+                                    <div className="flex items-center gap-1">
+                                        Updated
+                                        <div className="group relative">
+                                            <svg 
+                                                className="w-4 h-4 text-gray-500 cursor-help hover:text-gray-300 transition-colors" 
+                                                fill="none" 
+                                                stroke="currentColor" 
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-800 text-gray-200 text-xs rounded shadow-lg z-50 pointer-events-none">
+                                                Updated every 24 hours
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-800"></div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </th>
                                 <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
                                     Action
