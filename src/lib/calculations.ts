@@ -1,4 +1,4 @@
-import { Subscription, YieldResult, EarnProduct, PortfolioPosition, AllocationSlot, OptimalAllocation, AssetSymbol } from '@/types';
+import { Subscription, YieldResult, EarnProduct, PortfolioPosition, AllocationSlot, OptimalAllocation, AssetSymbol, PriceMap, isStablecoin } from '@/types';
 
 /**
  * Calculate effective yield based on tiered APR structure
@@ -172,11 +172,63 @@ export function getRelativeTime(dateString: string): string {
 }
 
 /**
- * Calculate weighted average APR for portfolio
+ * Scale a product's tier thresholds from native token units to USD so that
+ * calculateEffectiveYield can accept a plain USD amount for any asset.
+ * For stablecoins (1:1 with USD) the product is returned unchanged.
+ */
+export function normalizeToUsd(product: EarnProduct, prices: PriceMap): EarnProduct {
+    if (isStablecoin(product.asset)) return product;
+    const price = prices[product.asset];
+    if (!price) return product;
+    return {
+        ...product,
+        subscriptions: product.subscriptions.map(sub => ({
+            ...sub,
+            tier: {
+                min: sub.tier.min * price,
+                max: sub.tier.max === -1 ? -1 : sub.tier.max * price,
+            },
+        })),
+    };
+}
+
+/**
+ * Convert a USD amount to native token amount for a given asset.
+ * Returns usdAmount unchanged for stablecoins.
+ */
+export function usdToNative(usdAmount: number, asset: AssetSymbol, prices: PriceMap): number {
+    if (isStablecoin(asset)) return usdAmount;
+    const price = prices[asset];
+    return price ? usdAmount / price : 0;
+}
+
+/**
+ * Convert a native token amount to USD.
+ * Returns nativeAmount unchanged for stablecoins.
+ */
+export function nativeToUsd(nativeAmount: number, asset: AssetSymbol, prices: PriceMap): number {
+    if (isStablecoin(asset)) return nativeAmount;
+    const price = prices[asset];
+    return price ? nativeAmount * price : 0;
+}
+
+/**
+ * Format a native token amount for display.
+ */
+export function formatNative(amount: number, asset: AssetSymbol): string {
+    const decimals = asset === 'BTC' ? 6 : asset === 'ETH' ? 5 : 4;
+    return `${amount.toFixed(decimals)} ${asset}`;
+}
+
+/**
+ * Calculate weighted average APR for portfolio.
+ * Positions for non-stablecoins store amounts in native token units;
+ * pass prices to convert to USD for balance and yield calculations.
  */
 export function calculatePortfolioMetrics(
     positions: PortfolioPosition[],
-    products: EarnProduct[]
+    products: EarnProduct[],
+    prices: PriceMap = {}
 ) {
     if (positions.length === 0) {
         return {
@@ -195,12 +247,17 @@ export function calculatePortfolioMetrics(
             p => p.name.toLowerCase() === position.exchange.toLowerCase() && p.asset === position.asset
         );
 
+        const usdAmount = isStablecoin(position.asset)
+            ? position.amount
+            : nativeToUsd(position.amount, position.asset, prices);
+
         if (product) {
-            const yield_ = calculateEffectiveYield(position.amount, product.subscriptions);
-            totalBalance += position.amount;
+            const normalized = normalizeToUsd(product, prices);
+            const yield_ = calculateEffectiveYield(usdAmount, normalized.subscriptions);
+            totalBalance += usdAmount;
             totalAnnualIncome += yield_.annualReturn;
         } else {
-            totalBalance += position.amount;
+            totalBalance += usdAmount;
         }
     }
 

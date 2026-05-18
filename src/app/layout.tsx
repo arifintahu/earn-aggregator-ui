@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { PortfolioProvider } from "@/context/PortfolioContext";
+import { PriceProvider } from "@/context/PriceContext";
 import PWAInstallPopup from "@/components/PWAInstallPopup";
 
 const inter = Inter({
@@ -72,10 +73,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`}>
-        <PortfolioProvider>
-          {children}
-          <PWAInstallPopup />
-        </PortfolioProvider>
+        <PriceProvider>
+          <PortfolioProvider>
+            {children}
+            <PWAInstallPopup />
+          </PortfolioProvider>
+        </PriceProvider>
       </body>
     </html>
   );

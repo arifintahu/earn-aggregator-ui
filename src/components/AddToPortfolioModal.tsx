@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import { EarnProduct } from '@/types';
 import { usePortfolio } from '@/context/PortfolioContext';
-import { capitalizeExchange } from '@/lib/calculations';
+import { usePrices } from '@/context/PriceContext';
+import { capitalizeExchange, formatUSD, nativeToUsd } from '@/lib/calculations';
 import { EXCHANGE_ICONS } from '@/constants';
+import { isStablecoin } from '@/types';
 
 interface AddToPortfolioModalProps {
     product: EarnProduct;
@@ -14,21 +16,30 @@ interface AddToPortfolioModalProps {
 export default function AddToPortfolioModal({ product, onClose }: AddToPortfolioModalProps) {
     const [amount, setAmount] = useState('');
     const { addPosition } = usePortfolio();
+    const { prices } = usePrices();
+
+    const isCrypto = !isStablecoin(product.asset);
+    const numAmount = parseFloat(amount) || 0;
+    const usdValue = isCrypto ? nativeToUsd(numAmount, product.asset, prices) : numAmount;
+    const price = prices[product.asset];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-
-        const numAmount = parseFloat(amount);
         if (isNaN(numAmount) || numAmount <= 0) return;
-
+        // For non-stablecoins, amount is stored in native tokens
         addPosition({
             exchange: product.name,
             asset: product.asset,
             amount: numAmount,
         });
-
         onClose();
     };
+
+    const assetColor = product.asset === 'BTC' ? 'text-orange-400'
+        : product.asset === 'ETH' ? 'text-gray-300'
+        : product.asset === 'SOL' ? 'text-purple-400'
+        : product.asset === 'USDT' ? 'text-emerald-400'
+        : 'text-blue-400';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -66,32 +77,49 @@ export default function AddToPortfolioModal({ product, onClose }: AddToPortfolio
                         )}
                         <div>
                             <p className="font-medium">{capitalizeExchange(product.name)}</p>
-                            <p className={`text-sm ${product.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
-                                }`}>
-                                {product.asset}
-                            </p>
+                            <p className={`text-sm ${assetColor}`}>{product.asset}</p>
                         </div>
+                        {isCrypto && price && (
+                            <div className="ml-auto text-right">
+                                <p className="text-xs text-gray-500">Current price</p>
+                                <p className="text-sm font-medium">{formatUSD(price)}</p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit}>
                     <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-300 mb-2">
-                            Deposit Amount ($)
+                            {isCrypto ? `Deposit Amount (${product.asset})` : 'Deposit Amount ($)'}
                         </label>
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                            {!isCrypto && (
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                            )}
                             <input
                                 type="number"
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
-                                placeholder="Enter amount"
-                                className="input-field pl-8 w-full"
+                                placeholder={isCrypto ? `0.00 ${product.asset}` : 'Enter amount'}
+                                className={`input-field ${!isCrypto ? 'pl-8' : 'pl-4'} w-full`}
                                 min="0"
-                                step="0.01"
+                                step={isCrypto ? '0.000001' : '0.01'}
                                 autoFocus
                             />
+                            {isCrypto && (
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+                                    {product.asset}
+                                </span>
+                            )}
                         </div>
+
+                        {/* USD equivalent for crypto */}
+                        {isCrypto && numAmount > 0 && (
+                            <p className="mt-1.5 text-sm text-gray-400">
+                                ≈ {price ? formatUSD(usdValue) : 'Price unavailable'}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex gap-3">
@@ -104,7 +132,7 @@ export default function AddToPortfolioModal({ product, onClose }: AddToPortfolio
                         </button>
                         <button
                             type="submit"
-                            disabled={!amount || parseFloat(amount) <= 0}
+                            disabled={!amount || numAmount <= 0}
                             className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Add Position

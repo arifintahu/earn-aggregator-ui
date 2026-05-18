@@ -12,6 +12,14 @@ export interface Subscription {
 
 export type AssetSymbol = 'USDT' | 'USDC' | 'BTC' | 'ETH' | 'SOL';
 
+export type PriceMap = Partial<Record<AssetSymbol, number>>;
+
+export const STABLECOIN_ASSETS: AssetSymbol[] = ['USDT', 'USDC'];
+
+export function isStablecoin(asset: AssetSymbol): boolean {
+    return STABLECOIN_ASSETS.includes(asset);
+}
+
 export interface EarnProduct {
   name: string;
   asset: AssetSymbol;
