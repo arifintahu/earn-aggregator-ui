@@ -3,13 +3,19 @@
 import React, { useState } from 'react';
 import { EarnProduct, PortfolioPosition } from '@/types';
 import { usePortfolio } from '@/context/PortfolioContext';
+import { usePrices } from '@/context/PriceContext';
 import { EXCHANGE_ICONS } from '@/constants';
+import { isStablecoin } from '@/types';
 import {
     calculatePortfolioMetrics,
     formatAPR,
     formatUSD,
+    formatNative,
     capitalizeExchange,
-    calculateEffectiveYield
+    calculateEffectiveYield,
+    normalizeToUsd,
+    nativeToUsd,
+    getAssetBadgeClass,
 } from '@/lib/calculations';
 
 interface PortfolioTrackerProps {
@@ -18,10 +24,11 @@ interface PortfolioTrackerProps {
 
 export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
     const { positions, updatePosition, removePosition, clearPortfolio } = usePortfolio();
+    const { prices } = usePrices();
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editAmount, setEditAmount] = useState('');
 
-    const metrics = calculatePortfolioMetrics(positions, products);
+    const metrics = calculatePortfolioMetrics(positions, products, prices);
 
     const handleEditStart = (position: PortfolioPosition) => {
         setEditingId(position.id);
@@ -47,7 +54,11 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
             p => p.name.toLowerCase() === position.exchange.toLowerCase() && p.asset === position.asset
         );
         if (product) {
-            return calculateEffectiveYield(position.amount, product.subscriptions);
+            const normalized = normalizeToUsd(product, prices);
+            const usdAmount = isStablecoin(position.asset)
+                ? position.amount
+                : nativeToUsd(position.amount, position.asset, prices);
+            return calculateEffectiveYield(usdAmount, normalized.subscriptions);
         }
         return null;
     };
@@ -107,6 +118,10 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                     {positions.map((position) => {
                         const yield_ = getPositionYield(position);
                         const isEditing = editingId === position.id;
+                        const isCrypto = !isStablecoin(position.asset);
+                        const usdValue = isCrypto
+                            ? nativeToUsd(position.amount, position.asset, prices)
+                            : position.amount;
 
                         return (
                             <div
@@ -129,14 +144,23 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                                         )}
                                         <div className="min-w-0">
                                             <p className="font-medium text-sm truncate">{capitalizeExchange(position.exchange)}</p>
-                                            <span className={`text-xs ${position.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'}`}>
+                                            <span className={getAssetBadgeClass(position.asset)}>
                                                 {position.asset}
                                             </span>
                                         </div>
                                     </div>
                                     {!isEditing && (
                                         <div className="text-right flex-shrink-0">
-                                            <p className="font-semibold text-sm">{formatUSD(position.amount)}</p>
+                                            {isCrypto ? (
+                                                <>
+                                                    <p className="font-semibold text-sm">{formatNative(position.amount, position.asset)}</p>
+                                                    {usdValue > 0 && (
+                                                        <p className="text-xs text-gray-400">{formatUSD(usdValue)}</p>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <p className="font-semibold text-sm">{formatUSD(position.amount)}</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -145,13 +169,20 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                                 <div className="flex items-center justify-between">
                                     {isEditing ? (
                                         <div className="flex items-center gap-2 w-full">
-                                            <input
-                                                type="number"
-                                                value={editAmount}
-                                                onChange={(e) => setEditAmount(e.target.value)}
-                                                className="input-field flex-1 text-sm py-1 px-2"
-                                                autoFocus
-                                            />
+                                            <div className="relative flex-1">
+                                                <input
+                                                    type="number"
+                                                    value={editAmount}
+                                                    onChange={(e) => setEditAmount(e.target.value)}
+                                                    className="input-field text-sm py-1 px-2 w-full"
+                                                    autoFocus
+                                                />
+                                                {isCrypto && (
+                                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">
+                                                        {position.asset}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <button
                                                 onClick={() => handleEditSave(position.id)}
                                                 className="p-1.5 text-crypto-green hover:text-crypto-green/80"

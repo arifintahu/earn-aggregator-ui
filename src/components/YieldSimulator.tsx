@@ -3,7 +3,8 @@
 import React, { useState, useMemo } from 'react';
 import { EarnProduct, ExchangeYieldResult } from '@/types';
 import { EXCHANGE_ICONS } from '@/constants';
-import { calculateEffectiveYield, calculateOptimalAllocation, getMaxApr, formatAPR, formatUSD, capitalizeExchange } from '@/lib/calculations';
+import { calculateEffectiveYield, calculateOptimalAllocation, getMaxApr, formatAPR, formatUSD, capitalizeExchange, normalizeToUsd, getAssetBadgeClass } from '@/lib/calculations';
+import { usePrices } from '@/context/PriceContext';
 
 interface YieldSimulatorProps {
     products: EarnProduct[];
@@ -12,30 +13,43 @@ interface YieldSimulatorProps {
 export default function YieldSimulator({ products }: YieldSimulatorProps) {
     const [amount, setAmount] = useState<string>('1000');
     const [showAllOptions, setShowAllOptions] = useState(false);
+    const { prices, pricesLoading } = usePrices();
 
     const numAmount = parseFloat(amount) || 0;
 
-    // Calculate optimal allocation across all exchanges
+    // Normalize all products so tier thresholds are in USD (handles BTC/ETH/SOL tiers)
+    const normalizedProducts = useMemo(
+        () => products.map(p => normalizeToUsd(p, prices)),
+        [products, prices]
+    );
+
+    const hasCryptoProducts = useMemo(
+        () => products.some(p => p.asset === 'BTC' || p.asset === 'ETH' || p.asset === 'SOL'),
+        [products]
+    );
+
+    const pricesPending = hasCryptoProducts && pricesLoading;
+
     const optimalAllocation = useMemo(() => {
-        return calculateOptimalAllocation(numAmount, products);
-    }, [numAmount, products]);
+        if (pricesPending) return { allocations: [], totalAmount: 0, totalAnnualReturn: 0, effectiveApr: 0, dailyReward: 0, monthlyReward: 0 };
+        return calculateOptimalAllocation(numAmount, normalizedProducts);
+    }, [numAmount, normalizedProducts, pricesPending]);
 
-    // Single exchange results for comparison
     const singleExchangeResults = useMemo(() => {
-        if (numAmount <= 0) return [];
+        if (numAmount <= 0 || pricesPending) return [];
 
-        const calculated: ExchangeYieldResult[] = products.map(product => {
+        const calculated: ExchangeYieldResult[] = normalizedProducts.map((product, i) => {
             const yield_ = calculateEffectiveYield(numAmount, product.subscriptions);
             return {
                 exchange: product.name,
-                asset: product.asset,
+                asset: products[i].asset,
                 maxApr: getMaxApr(product.subscriptions),
                 ...yield_,
             };
         });
 
         return calculated.sort((a, b) => b.effectiveApr - a.effectiveApr);
-    }, [numAmount, products]);
+    }, [numAmount, normalizedProducts, products, pricesPending]);
 
     const bestSingleResult = singleExchangeResults[0];
 
@@ -51,7 +65,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
             {/* Input Section */}
             <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Investment Amount
+                    Investment Amount (USD)
                 </label>
                 <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">$</span>
@@ -81,10 +95,29 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                         </button>
                     ))}
                 </div>
+
+                {/* Live price indicator for crypto assets */}
+                {hasCryptoProducts && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-500">
+                        <div className={`w-1.5 h-1.5 rounded-full ${pricesLoading ? 'bg-yellow-400 animate-pulse' : 'bg-crypto-green'}`} />
+                        {pricesLoading
+                            ? 'Fetching live prices...'
+                            : prices.BTC
+                                ? `Live: BTC $${prices.BTC?.toLocaleString()} · ETH $${prices.ETH?.toLocaleString()} · SOL $${prices.SOL?.toLocaleString()}`
+                                : 'Price data unavailable'}
+                    </div>
+                )}
             </div>
 
+            {/* Loading state for crypto products */}
+            {pricesPending && (
+                <div className="text-center py-6 text-gray-400 text-sm animate-pulse">
+                    Loading live prices for BTC / ETH / SOL…
+                </div>
+            )}
+
             {/* Optimal Strategy Section */}
-            {numAmount > 0 && optimalAllocation.allocations.length > 0 && (
+            {!pricesPending && numAmount > 0 && optimalAllocation.allocations.length > 0 && (
                 <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-crypto-green/20 to-transparent border border-crypto-green/30">
                     {/* Header */}
                     <div className="flex items-center gap-2 mb-4">
@@ -165,7 +198,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                                         <div>
                                             <p className="font-medium text-sm">{capitalizeExchange(alloc.exchange)}</p>
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs ${alloc.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'}`}>
+                                                <span className={getAssetBadgeClass(alloc.asset)}>
                                                     {alloc.asset}
                                                 </span>
                                                 <span className={`text-xs px-1.5 py-0.5 rounded ${alloc.tierType === 'bonus'
@@ -189,7 +222,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
             )}
 
             {/* Toggle for Single Exchange Options */}
-            {numAmount > 0 && singleExchangeResults.length > 0 && (
+            {!pricesPending && numAmount > 0 && singleExchangeResults.length > 0 && (
                 <div>
                     <button
                         onClick={() => setShowAllOptions(!showAllOptions)}
@@ -231,10 +264,9 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                                         )}
                                         <div>
                                             <p className="font-medium">{capitalizeExchange(result.exchange)}</p>
-                                            <p className={`text-xs ${result.asset === 'USDT' ? 'text-emerald-400' : 'text-blue-400'
-                                                }`}>
+                                            <span className={getAssetBadgeClass(result.asset)}>
                                                 {result.asset}
-                                            </p>
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="text-right">
