@@ -1,5 +1,16 @@
 import { Subscription, YieldResult, EarnProduct, PortfolioPosition, AllocationSlot, OptimalAllocation, AssetSymbol, PriceMap, isStablecoin } from '@/types';
 
+export function getAssetBadgeClass(asset: string): string {
+  const color =
+    asset === 'USDT' ? 'bg-emerald-500/20 text-emerald-400' :
+    asset === 'USDC' ? 'bg-blue-500/20 text-blue-400' :
+    asset === 'BTC'  ? 'bg-orange-500/20 text-orange-400' :
+    asset === 'ETH'  ? 'bg-gray-500/20 text-gray-300' :
+    asset === 'SOL'  ? 'bg-purple-500/20 text-purple-400' :
+                       'bg-gray-500/20 text-gray-400';
+  return `inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${color}`;
+}
+
 /**
  * Calculate effective yield based on tiered APR structure
  * Example: $1000 on Binance USDT

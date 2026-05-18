@@ -15,6 +15,7 @@ import {
     calculateEffectiveYield,
     normalizeToUsd,
     nativeToUsd,
+    getAssetBadgeClass,
 } from '@/lib/calculations';
 
 interface PortfolioTrackerProps {
@@ -61,13 +62,6 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
         }
         return null;
     };
-
-    const getAssetColor = (asset: string) =>
-        asset === 'BTC' ? 'text-orange-400'
-        : asset === 'ETH' ? 'text-gray-300'
-        : asset === 'SOL' ? 'text-purple-400'
-        : asset === 'USDT' ? 'text-emerald-400'
-        : 'text-blue-400';
 
     return (
         <div className="glass-card p-6">
@@ -150,7 +144,7 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                                         )}
                                         <div className="min-w-0">
                                             <p className="font-medium text-sm truncate">{capitalizeExchange(position.exchange)}</p>
-                                            <span className={`text-xs ${getAssetColor(position.asset)}`}>
+                                            <span className={getAssetBadgeClass(position.asset)}>
                                                 {position.asset}
                                             </span>
                                         </div>

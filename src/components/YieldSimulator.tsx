@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { EarnProduct, ExchangeYieldResult } from '@/types';
 import { EXCHANGE_ICONS } from '@/constants';
-import { calculateEffectiveYield, calculateOptimalAllocation, getMaxApr, formatAPR, formatUSD, capitalizeExchange, normalizeToUsd } from '@/lib/calculations';
+import { calculateEffectiveYield, calculateOptimalAllocation, getMaxApr, formatAPR, formatUSD, capitalizeExchange, normalizeToUsd, getAssetBadgeClass } from '@/lib/calculations';
 import { usePrices } from '@/context/PriceContext';
 
 interface YieldSimulatorProps {
@@ -198,7 +198,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                                         <div>
                                             <p className="font-medium text-sm">{capitalizeExchange(alloc.exchange)}</p>
                                             <div className="flex items-center gap-2">
-                                                <span className={`text-xs ${alloc.asset === 'USDT' ? 'text-emerald-400' : alloc.asset === 'USDC' ? 'text-blue-400' : alloc.asset === 'BTC' ? 'text-orange-400' : alloc.asset === 'ETH' ? 'text-gray-300' : 'text-purple-400'}`}>
+                                                <span className={getAssetBadgeClass(alloc.asset)}>
                                                     {alloc.asset}
                                                 </span>
                                                 <span className={`text-xs px-1.5 py-0.5 rounded ${alloc.tierType === 'bonus'
@@ -264,9 +264,9 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
                                         )}
                                         <div>
                                             <p className="font-medium">{capitalizeExchange(result.exchange)}</p>
-                                            <p className={`text-xs ${result.asset === 'USDT' ? 'text-emerald-400' : result.asset === 'USDC' ? 'text-blue-400' : result.asset === 'BTC' ? 'text-orange-400' : result.asset === 'ETH' ? 'text-gray-300' : 'text-purple-400'}`}>
+                                            <span className={getAssetBadgeClass(result.asset)}>
                                                 {result.asset}
-                                            </p>
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="text-right">
