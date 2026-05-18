@@ -1,4 +1,4 @@
-import { Subscription, YieldResult, EarnProduct, PortfolioPosition, AllocationSlot, OptimalAllocation } from '@/types';
+import { Subscription, YieldResult, EarnProduct, PortfolioPosition, AllocationSlot, OptimalAllocation, AssetSymbol } from '@/types';
 
 /**
  * Calculate effective yield based on tiered APR structure
@@ -60,7 +60,7 @@ export function calculateOptimalAllocation(amount: number, products: EarnProduct
     // Build list of all tier slots from all products
     interface TierSlot {
         exchange: string;
-        asset: 'USDT' | 'USDC';
+        asset: AssetSymbol;
         tierType: 'bonus' | 'base';
         apr: number;
         minAmount: number;

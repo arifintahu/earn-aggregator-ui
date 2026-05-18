@@ -10,9 +10,11 @@ export interface Subscription {
   tier: Tier;
 }
 
+export type AssetSymbol = 'USDT' | 'USDC' | 'BTC' | 'ETH' | 'SOL';
+
 export interface EarnProduct {
   name: string;
-  asset: 'USDT' | 'USDC';
+  asset: AssetSymbol;
   subscriptions: Subscription[];
   updatedAt: string;
 }
@@ -21,7 +23,7 @@ export interface EarnProduct {
 export interface PortfolioPosition {
   id: string;
   exchange: string;
-  asset: 'USDT' | 'USDC';
+  asset: AssetSymbol;
   amount: number;
   timestamp: number;
 }
@@ -43,7 +45,7 @@ export interface ExchangeYieldResult extends YieldResult {
 // Multi-exchange allocation types
 export interface AllocationSlot {
   exchange: string;
-  asset: 'USDT' | 'USDC';
+  asset: AssetSymbol;
   tierType: 'bonus' | 'base';
   amount: number;
   apr: number;           // APR decimal (e.g., 0.18 for 18%)
