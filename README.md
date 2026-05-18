@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Earn Aggregator UI
 
-## Getting Started
+A modern, responsive frontend for visualizing aggregated flexible earn product APYs from major crypto exchanges. Built with Next.js and TypeScript.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework**: Next.js + TypeScript for performance and type safety.
+- **Data Source**: Fetches aggregated earn products from [Earn Aggregator API](https://github.com/arifintahu/earn-aggregator).
+- **Asset Filtering**: Filter products by asset — USDT, USDC, BTC, ETH, SOL.
+- **APR by Tier**: Displays APR breakdown per deposit tier with asset-native units.
+- **Exchange Coverage**: Aggregated data from:
+  - Binance
+  - Bybit
+  - Bitget
+  - MEXC
+  - Gate.io
+
+## Supported Assets
+
+| Asset | Type |
+|-------|------|
+| USDT | Stablecoin |
+| USDC | Stablecoin |
+| BTC | Bitcoin |
+| ETH | Ethereum |
+| SOL | Solana |
+
+## API
+
+Earn products are fetched from:
+
+```
+GET https://earn-aggregator.vercel.app/api/v1/earn-products
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+See the [Earn Aggregator API](https://github.com/arifintahu/earn-aggregator) for full API documentation.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-## Learn More
+2. Run in development mode:
+   ```bash
+   npm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+3. Build for production:
+   ```bash
+   npm run build
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+This project is optimized for [Vercel](https://vercel.com/new) deployment.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Push to GitHub**.
+2. **Import Project** in Vercel.
+3. **Deploy** — no environment variables required for the UI.
