@@ -1,17 +1,31 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Subscription } from '@/types';
+import { Subscription, AssetSymbol } from '@/types';
 import { formatAPR, formatUSD } from '@/lib/calculations';
+
+const CRYPTO_ASSETS = new Set<AssetSymbol>(['BTC', 'ETH', 'SOL']);
 
 interface TierBreakdownProps {
     subscriptions: Subscription[];
+    asset: AssetSymbol;
 }
 
-export default function TierBreakdown({ subscriptions }: TierBreakdownProps) {
+export default function TierBreakdown({ subscriptions, asset }: TierBreakdownProps) {
     const [isOpen, setIsOpen] = useState(false);
 
+    const isCrypto = CRYPTO_ASSETS.has(asset);
     const sortedTiers = [...subscriptions].sort((a, b) => a.tier.min - b.tier.min);
+
+    const formatAmount = (value: number): string => {
+        if (isCrypto) {
+            if (value >= 1000000) return `${(value / 1000000).toFixed(0)}M`;
+            if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+            return value % 1 === 0 ? value.toString() : value.toFixed(4).replace(/\.?0+$/, '');
+        }
+        if (value >= 1000000) return `${(value / 1000000).toFixed(0)}M`;
+        return formatUSD(value).replace('$', '').replace('.00', '');
+    };
 
     return (
         <div className="relative">
@@ -37,13 +51,10 @@ export default function TierBreakdown({ subscriptions }: TierBreakdownProps) {
                         {sortedTiers.map((sub, index) => {
                             const maxDisplay = sub.tier.max === -1
                                 ? '∞'
-                                : sub.tier.max >= 1000000
-                                    ? `${(sub.tier.max / 1000000).toFixed(0)}M`
-                                    : formatUSD(sub.tier.max).replace('$', '').replace('.00', '');
-
-                            const minDisplay = sub.tier.min >= 1000000
-                                ? `${(sub.tier.min / 1000000).toFixed(0)}M`
-                                : formatUSD(sub.tier.min).replace('$', '').replace('.00', '');
+                                : formatAmount(sub.tier.max);
+                            const minDisplay = formatAmount(sub.tier.min);
+                            const prefix = isCrypto ? '' : '$';
+                            const suffix = isCrypto ? ` ${asset}` : '';
 
                             return (
                                 <div
@@ -59,7 +70,7 @@ export default function TierBreakdown({ subscriptions }: TierBreakdownProps) {
                                                 {sub.type}
                                             </span>
                                             <span className="text-sm text-gray-300 whitespace-nowrap">
-                                                ${minDisplay} - ${maxDisplay}
+                                                {prefix}{minDisplay} - {prefix}{maxDisplay}{suffix}
                                             </span>
                                         </div>
                                         <span className="text-crypto-green font-medium whitespace-nowrap flex-shrink-0">

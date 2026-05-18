@@ -18,7 +18,7 @@ interface MarketOverviewProps {
     getProductKey: (product: { name: string; asset: string }) => string;
 }
 
-type AssetFilter = 'ALL' | 'USDT' | 'USDC';
+type AssetFilter = 'ALL' | 'USDT' | 'USDC' | 'BTC' | 'ETH' | 'SOL';
 type SortBy = 'exchange' | 'apr';
 type SortOrder = 'asc' | 'desc';
 
@@ -131,12 +131,12 @@ export default function MarketOverview({ products, loading, error, selectedProdu
                         </div>
 
                         {/* Asset Filter */}
-                        <div className="flex rounded-lg overflow-hidden border border-white/10">
-                            {(['ALL', 'USDT', 'USDC'] as AssetFilter[]).map((asset) => (
+                        <div className="flex rounded-lg overflow-hidden border border-white/10 flex-wrap">
+                            {(['ALL', 'USDT', 'USDC', 'BTC', 'ETH', 'SOL'] as AssetFilter[]).map((asset) => (
                                 <button
                                     key={asset}
                                     onClick={() => setAssetFilter(asset)}
-                                    className={`px-4 py-2 text-sm font-medium transition-colors ${assetFilter === asset
+                                    className={`px-3 py-2 text-sm font-medium transition-colors ${assetFilter === asset
                                         ? 'bg-crypto-green/20 text-crypto-green'
                                         : 'bg-transparent text-gray-400 hover:text-white hover:bg-white/5'
                                         }`}
@@ -251,10 +251,14 @@ export default function MarketOverview({ products, loading, error, selectedProdu
                                             </div>
                                         </td>
                                         <td className="py-4 px-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${product.asset === 'USDT'
-                                                ? 'bg-emerald-500/20 text-emerald-400'
-                                                : 'bg-blue-500/20 text-blue-400'
-                                                }`}>
+                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                                                product.asset === 'USDT' ? 'bg-emerald-500/20 text-emerald-400' :
+                                                product.asset === 'USDC' ? 'bg-blue-500/20 text-blue-400' :
+                                                product.asset === 'BTC' ? 'bg-orange-500/20 text-orange-400' :
+                                                product.asset === 'ETH' ? 'bg-gray-500/20 text-gray-300' :
+                                                product.asset === 'SOL' ? 'bg-purple-500/20 text-purple-400' :
+                                                'bg-gray-500/20 text-gray-400'
+                                            }`}>
                                                 {product.asset}
                                             </span>
                                         </td>
@@ -264,7 +268,7 @@ export default function MarketOverview({ products, loading, error, selectedProdu
                                             </span>
                                         </td>
                                         <td className="py-4 px-4">
-                                            <TierBreakdown subscriptions={product.subscriptions} />
+                                            <TierBreakdown subscriptions={product.subscriptions} asset={product.asset} />
                                         </td>
                                         <td className="py-4 px-4 text-sm text-gray-400">
                                             {getRelativeTime(product.updatedAt)}
