@@ -17,7 +17,7 @@ export function ExchangeMark({ name, size = 32 }: ExchangeMarkProps) {
         overflow: 'hidden',
         flexShrink: 0,
         boxShadow: `0 0 0 1px rgba(255,255,255,0.10) inset, 0 6px 16px -8px ${meta.color}80`,
-        background: meta.color,
+        background: '#fff',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
@@ -28,7 +28,7 @@ export function ExchangeMark({ name, size = 32 }: ExchangeMarkProps) {
           alt={meta.long ?? name}
           width={size}
           height={size}
-          style={{ width: size, height: size, objectFit: 'cover', mixBlendMode: 'multiply' }}
+          style={{ width: size, height: size, objectFit: 'cover' }}
         />
       ) : (
         <span style={{
