@@ -16,6 +16,9 @@ interface MarketOverviewProps {
     onToggleProduct: (productKey: string) => void;
     onToggleAll: (selectAll: boolean) => void;
     getProductKey: (product: { name: string; asset: string }) => string;
+    // New props used by redesigned page.tsx (implemented in Task 6)
+    onAddPortfolio?: (product: EarnProduct) => void;
+    onOpenDetail?: (product: EarnProduct) => void;
 }
 
 type AssetFilter = 'ALL' | 'USDT' | 'USDC' | 'BTC' | 'ETH' | 'SOL';
