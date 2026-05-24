@@ -185,7 +185,7 @@ export default function Home() {
         </div>
 
         {/* Desktop: 2-col grid */}
-        <div className="ea-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 'var(--gap-1)', alignItems: 'start' }}>
+        <div className="ea-desktop-only ea-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 'var(--gap-1)', alignItems: 'start' }}>
           <div id="section-market">
             <MarketOverview
               products={products}
@@ -206,7 +206,7 @@ export default function Home() {
         </div>
 
         {/* Mobile: single tab view */}
-        <div className="ea-mobile-only" style={{ display: 'none' }}>
+        <div className="ea-mobile-only">
           {activeTab === 'market' && (
             <MarketOverview
               products={products}
