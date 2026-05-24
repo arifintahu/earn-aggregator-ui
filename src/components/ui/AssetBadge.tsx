@@ -1,5 +1,13 @@
 import { ASSET_META } from '@/constants';
 
+const COIN_ICONS: Partial<Record<string, string>> = {
+  BTC:  '/icons/coins/btc.png',
+  ETH:  '/icons/coins/eth.png',
+  SOL:  '/icons/coins/sol.png',
+  USDT: '/icons/coins/usdt.png',
+  USDC: '/icons/coins/usdc.png',
+};
+
 interface AssetCoinProps {
   asset: string;
   size?: number;
@@ -7,20 +15,28 @@ interface AssetCoinProps {
 
 export function AssetCoin({ asset, size = 24 }: AssetCoinProps) {
   const m = ASSET_META[asset] ?? { color: '#888', glyph: '?' };
-  const fs = Math.round(size * 0.5);
+  const imgSrc = COIN_ICONS[asset];
   return (
     <div
       style={{
         width: size, height: size, borderRadius: '50%',
         background: m.color,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        color: '#fff', fontWeight: 700, fontSize: fs,
-        fontFamily: 'var(--font-mono)',
+        overflow: 'hidden',
         boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset',
         flexShrink: 0,
       }}
     >
-      {m.glyph}
+      {imgSrc ? (
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img src={imgSrc} alt={asset} width={size} height={size}
+          style={{ width: size, height: size, objectFit: 'cover' }} />
+      ) : (
+        <span style={{
+          color: '#fff', fontWeight: 700, fontSize: Math.round(size * 0.5),
+          fontFamily: 'var(--font-mono)',
+        }}>{m.glyph}</span>
+      )}
     </div>
   );
 }
