@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { EXCHANGE_ICONS, EXCHANGE_META } from '@/constants';
 
 interface ExchangeMarkProps {
@@ -18,17 +17,18 @@ export function ExchangeMark({ name, size = 32 }: ExchangeMarkProps) {
         overflow: 'hidden',
         flexShrink: 0,
         boxShadow: `0 0 0 1px rgba(255,255,255,0.10) inset, 0 6px 16px -8px ${meta.color}80`,
-        background: `linear-gradient(135deg, ${meta.color} 0%, ${meta.color}aa 100%)`,
+        background: `linear-gradient(135deg, ${meta.color}cc 0%, ${meta.color}66 100%)`,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
       }}
     >
       {imgSrc ? (
-        <Image
+        /* eslint-disable-next-line @next/next/no-img-element */
+        <img
           src={imgSrc}
           alt={meta.long ?? name}
           width={size}
           height={size}
-          style={{ width: size, height: size, objectFit: 'cover', borderRadius: '50%' }}
+          style={{ width: size, height: size, objectFit: 'cover' }}
         />
       ) : (
         <span style={{
