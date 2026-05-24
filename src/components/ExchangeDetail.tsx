@@ -421,7 +421,7 @@ export default function ExchangeDetail({
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <h1 className="ea-h1" style={{ margin: 0 }}>{meta.long}</h1>
               <a
-                href="#"
+                href={meta.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{

@@ -6,12 +6,12 @@ export const EXCHANGE_ICONS = {
     'gate': '/images/gate.webp',
 }
 
-export const EXCHANGE_META: Record<string, { color: string; glyph: string; long: string }> = {
-  binance: { color: '#F0B90B', glyph: 'B', long: 'Binance' },
-  bybit:   { color: '#F7A600', glyph: 'B', long: 'Bybit' },
-  bitget:  { color: '#00D8C2', glyph: 'b', long: 'Bitget' },
-  mexc:    { color: '#1972F5', glyph: 'M', long: 'MEXC' },
-  gate:    { color: '#2354E6', glyph: 'G', long: 'Gate.io' },
+export const EXCHANGE_META: Record<string, { color: string; glyph: string; long: string; url: string }> = {
+  binance: { color: '#F0B90B', glyph: 'B', long: 'Binance', url: 'https://www.binance.com/en/savings' },
+  bybit:   { color: '#F7A600', glyph: 'B', long: 'Bybit',   url: 'https://www.bybit.com/en/earn/' },
+  bitget:  { color: '#00D8C2', glyph: 'b', long: 'Bitget',  url: 'https://www.bitget.com/earn/' },
+  mexc:    { color: '#1972F5', glyph: 'M', long: 'MEXC',    url: 'https://www.mexc.com/earn' },
+  gate:    { color: '#2354E6', glyph: 'G', long: 'Gate.io', url: 'https://www.gate.io/earn' },
 }
 
 export const ASSET_META: Record<string, { color: string; label: string; glyph: string }> = {
