@@ -87,7 +87,10 @@ export default function Home() {
                 return (
                   <button
                     key={label}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => {
+                      setActiveTab(tab);
+                      document.getElementById(`section-${tab}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
                     style={{
                       all: 'unset', padding: '6px 12px', borderRadius: 8,
                       fontSize: 13, fontWeight: 500, cursor: 'pointer',
@@ -183,7 +186,7 @@ export default function Home() {
 
         {/* Desktop: 2-col grid */}
         <div className="ea-main-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 'var(--gap-1)', alignItems: 'start' }}>
-          <div>
+          <div id="section-market">
             <MarketOverview
               products={products}
               loading={loading}
@@ -197,8 +200,8 @@ export default function Home() {
             />
           </div>
           <div className="ea-sidebar" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap-1)', position: 'sticky', top: 80 }}>
-            <YieldSimulator products={selectedProducts} />
-            <PortfolioTracker products={products} />
+            <div id="section-simulator"><YieldSimulator products={selectedProducts} /></div>
+            <div id="section-portfolio"><PortfolioTracker products={products} /></div>
           </div>
         </div>
 
