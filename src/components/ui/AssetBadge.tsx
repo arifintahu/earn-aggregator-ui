@@ -20,7 +20,7 @@ export function AssetCoin({ asset, size = 24 }: AssetCoinProps) {
     <div
       style={{
         width: size, height: size, borderRadius: '50%',
-        background: m.color,
+        background: '#fff',
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
         overflow: 'hidden',
         boxShadow: '0 0 0 1px rgba(255,255,255,0.08) inset',
