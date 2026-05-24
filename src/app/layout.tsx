@@ -1,13 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { PortfolioProvider } from "@/context/PortfolioContext";
 import { PriceProvider } from "@/context/PriceContext";
 import PWAInstallPopup from "@/components/PWAInstallPopup";
 
-const inter = Inter({
+const geistSans = Geist({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-geist-sans",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
 });
 
 export const viewport: Viewport = {
@@ -57,7 +62,7 @@ export default function RootLayout({
         <meta name="color-scheme" content="dark" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="Earn Aggregator" />
-        <link rel="mask-icon" href="/icons/icon-192x192.png" color="#22c55e" />
+        <link rel="mask-icon" href="/icons/icon-192x192.png" color="#10b981" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -72,7 +77,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <PriceProvider>
           <PortfolioProvider>
             {children}
