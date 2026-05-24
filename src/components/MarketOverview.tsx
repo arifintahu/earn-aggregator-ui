@@ -3,311 +3,229 @@
 import React, { useState, useMemo } from 'react';
 import { EarnProduct } from '@/types';
 import { getMaxApr, formatAPR, getRelativeTime, capitalizeExchange } from '@/lib/calculations';
-import { usePortfolio } from '@/context/PortfolioContext';
-import { EXCHANGE_ICONS } from '@/constants';
-import AddToPortfolioModal from './AddToPortfolioModal';
-import TierBreakdown from './TierBreakdown';
+import { Icon } from '@/components/ui/Icon';
+import { ExchangeMark } from '@/components/ui/ExchangeMark';
+import { AssetCoin, AssetBadge } from '@/components/ui/AssetBadge';
+import { TierStrip } from '@/components/ui/TierStrip';
 
 interface MarketOverviewProps {
-    products: EarnProduct[];
-    loading: boolean;
-    error: string | null;
-    selectedProductKeys: Set<string>;
-    onToggleProduct: (productKey: string) => void;
-    onToggleAll: (selectAll: boolean) => void;
-    getProductKey: (product: { name: string; asset: string }) => string;
+  products: EarnProduct[];
+  loading: boolean;
+  error: string | null;
+  selectedProductKeys: Set<string>;
+  onToggleProduct: (productKey: string) => void;
+  onToggleAll: (selectAll: boolean) => void;
+  getProductKey: (product: { name: string; asset: string }) => string;
+  onAddPortfolio?: (product: EarnProduct) => void;
+  onOpenDetail?: (product: EarnProduct) => void;
 }
 
 type AssetFilter = 'ALL' | 'USDT' | 'USDC' | 'BTC' | 'ETH' | 'SOL';
-type SortBy = 'exchange' | 'apr';
+type SortBy = 'exchange' | 'apr' | 'asset';
 type SortOrder = 'asc' | 'desc';
 
-export default function MarketOverview({ products, loading, error, selectedProductKeys, onToggleProduct, onToggleAll, getProductKey }: MarketOverviewProps) {
-    const [assetFilter, setAssetFilter] = useState<AssetFilter>('ALL');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [sortBy, setSortBy] = useState<SortBy>('apr');
-    const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
-    const [selectedProduct, setSelectedProduct] = useState<EarnProduct | null>(null);
-    const [showAddModal, setShowAddModal] = useState(false);
+export default function MarketOverview({
+  products, loading, error,
+  selectedProductKeys, onToggleProduct, onToggleAll, getProductKey,
+  onAddPortfolio, onOpenDetail,
+}: MarketOverviewProps) {
+  const [assetFilter, setAssetFilter] = useState<AssetFilter>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortBy>('apr');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-    const filteredProducts = useMemo(() => {
-        let filtered = [...products];
-
-        // Filter by asset
-        if (assetFilter !== 'ALL') {
-            filtered = filtered.filter(p => p.asset === assetFilter);
-        }
-
-        // Filter by search query
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter(p => p.name.toLowerCase().includes(query));
-        }
-
-        // Sort
-        filtered.sort((a, b) => {
-            let comparison = 0;
-            if (sortBy === 'exchange') {
-                comparison = a.name.localeCompare(b.name);
-            } else if (sortBy === 'apr') {
-                comparison = getMaxApr(a.subscriptions) - getMaxApr(b.subscriptions);
-            }
-            return sortOrder === 'desc' ? -comparison : comparison;
-        });
-
-        return filtered;
-    }, [products, assetFilter, searchQuery, sortBy, sortOrder]);
-
-    const handleSort = (column: SortBy) => {
-        if (sortBy === column) {
-            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortBy(column);
-            setSortOrder('desc');
-        }
-    };
-
-    const handleAddToPortfolio = (product: EarnProduct) => {
-        setSelectedProduct(product);
-        setShowAddModal(true);
-    };
-
-    if (loading) {
-        return (
-            <div className="glass-card p-8">
-                <div className="flex items-center justify-center space-x-3">
-                    <div className="animate-spin h-6 w-6 border-2 border-crypto-green border-t-transparent rounded-full"></div>
-                    <span className="text-gray-400">Loading market data...</span>
-                </div>
-            </div>
-        );
+  const filtered = useMemo(() => {
+    let arr = [...products];
+    if (assetFilter !== 'ALL') arr = arr.filter(p => p.asset === assetFilter);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      arr = arr.filter(p => p.name.toLowerCase().includes(q) || p.asset.toLowerCase().includes(q));
     }
+    arr.sort((a, b) => {
+      let cmp = 0;
+      if (sortBy === 'exchange') cmp = a.name.localeCompare(b.name);
+      else if (sortBy === 'apr') cmp = getMaxApr(a.subscriptions) - getMaxApr(b.subscriptions);
+      else if (sortBy === 'asset') cmp = a.asset.localeCompare(b.asset);
+      return sortOrder === 'desc' ? -cmp : cmp;
+    });
+    return arr;
+  }, [products, assetFilter, searchQuery, sortBy, sortOrder]);
 
-    if (error) {
-        return (
-            <div className="glass-card p-8">
-                <div className="text-center">
-                    <p className="text-red-400 mb-4">Error: {error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="btn-primary"
-                    >
-                        Retry
-                    </button>
-                </div>
-            </div>
-        );
-    }
+  const handleSort = (col: SortBy) => {
+    if (sortBy === col) setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
+    else { setSortBy(col); setSortOrder('desc'); }
+  };
 
+  const aprCeiling = useMemo(
+    () => Math.max(0.001, ...products.flatMap(p => p.subscriptions.map(s => s.apr * 100))),
+    [products]
+  );
+
+  const totalSelected = selectedProductKeys.size;
+
+  if (loading) {
     return (
-        <>
-            <div className="glass-card p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
-                    <h2 className="text-xl font-semibold">Market Overview</h2>
-
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Search */}
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search exchange..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="input-field pl-10 w-full sm:w-48"
-                            />
-                            <svg
-                                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
-                        </div>
-
-                        {/* Asset Filter */}
-                        <div className="flex rounded-lg overflow-hidden border border-white/10 flex-wrap">
-                            {(['ALL', 'USDT', 'USDC', 'BTC', 'ETH', 'SOL'] as AssetFilter[]).map((asset) => (
-                                <button
-                                    key={asset}
-                                    onClick={() => setAssetFilter(asset)}
-                                    className={`px-3 py-2 text-sm font-medium transition-colors ${assetFilter === asset
-                                        ? 'bg-crypto-green/20 text-crypto-green'
-                                        : 'bg-transparent text-gray-400 hover:text-white hover:bg-white/5'
-                                        }`}
-                                >
-                                    {asset}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-white/10">
-                                <th className="text-center py-3 px-2 text-sm font-medium text-gray-400 w-12">
-                                    <div className="flex items-center justify-center gap-1">
-                                        <input
-                                            type="checkbox"
-                                            checked={products.length > 0 && selectedProductKeys.size === products.length}
-                                            onChange={(e) => onToggleAll(e.target.checked)}
-                                            className="w-4 h-4 rounded border-white/20 bg-white/5 text-crypto-green focus:ring-crypto-green focus:ring-offset-0 cursor-pointer accent-crypto-green"
-                                            title="Select all for Yield Simulator"
-                                        />
-                                    </div>
-                                </th>
-                                <th
-                                    className="text-left py-3 px-4 text-sm font-medium text-gray-400 cursor-pointer hover:text-white transition-colors"
-                                    onClick={() => handleSort('exchange')}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        Exchange
-                                        {sortBy === 'exchange' && (
-                                            <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                                        )}
-                                    </div>
-                                </th>
-                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                                    Asset
-                                </th>
-                                <th
-                                    className="text-left py-3 px-4 text-sm font-medium text-gray-400 cursor-pointer hover:text-white transition-colors"
-                                    onClick={() => handleSort('apr')}
-                                >
-                                    <div className="flex items-center gap-2">
-                                        Max APR
-                                        {sortBy === 'apr' && (
-                                            <span>{sortOrder === 'asc' ? '↑' : '↓'}</span>
-                                        )}
-                                    </div>
-                                </th>
-                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                                    Tier Details
-                                </th>
-                                <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">
-                                    <div className="flex items-center gap-1">
-                                        Updated
-                                        <div className="group relative">
-                                            <svg 
-                                                className="w-4 h-4 text-gray-500 cursor-help hover:text-gray-300 transition-colors" 
-                                                fill="none" 
-                                                stroke="currentColor" 
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-800 text-gray-200 text-xs rounded shadow-lg z-50 pointer-events-none">
-                                                Updated every 24 hours
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-800"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </th>
-                                <th className="text-right py-3 px-4 text-sm font-medium text-gray-400">
-                                    Action
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredProducts.map((product, index) => {
-                                const productKey = getProductKey(product);
-                                const isSelected = selectedProductKeys.has(productKey);
-                                return (
-                                    <tr
-                                        key={productKey}
-                                        className={`border-b border-white/5 hover:bg-white/5 transition-colors ${!isSelected ? 'opacity-50' : ''}`}
-                                    >
-                                        <td className="py-4 px-2 text-center">
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => onToggleProduct(productKey)}
-                                                className="w-4 h-4 rounded border-white/20 bg-white/5 text-crypto-green focus:ring-crypto-green focus:ring-offset-0 cursor-pointer accent-crypto-green"
-                                                title="Include in Yield Simulator"
-                                            />
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <div className="flex items-center gap-3">
-                                                {EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS] ? (
-                                                    <img
-                                                        src={EXCHANGE_ICONS[product.name.toLowerCase() as keyof typeof EXCHANGE_ICONS]}
-                                                        alt={product.name}
-                                                        className="w-8 h-8 rounded-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-crypto-green/30 to-crypto-green/10 flex items-center justify-center text-sm font-bold text-crypto-green">
-                                                        {product.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                )}
-                                                <span className="font-medium">{capitalizeExchange(product.name)}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                                                product.asset === 'USDT' ? 'bg-emerald-500/20 text-emerald-400' :
-                                                product.asset === 'USDC' ? 'bg-blue-500/20 text-blue-400' :
-                                                product.asset === 'BTC' ? 'bg-orange-500/20 text-orange-400' :
-                                                product.asset === 'ETH' ? 'bg-gray-500/20 text-gray-300' :
-                                                product.asset === 'SOL' ? 'bg-purple-500/20 text-purple-400' :
-                                                'bg-gray-500/20 text-gray-400'
-                                            }`}>
-                                                {product.asset}
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <span className="text-crypto-green font-semibold text-lg">
-                                                {formatAPR(getMaxApr(product.subscriptions))}%
-                                            </span>
-                                        </td>
-                                        <td className="py-4 px-4">
-                                            <TierBreakdown subscriptions={product.subscriptions} asset={product.asset} />
-                                        </td>
-                                        <td className="py-4 px-4 text-sm text-gray-400">
-                                            {getRelativeTime(product.updatedAt)}
-                                        </td>
-                                        <td className="py-4 px-4 text-right">
-                                            <button
-                                                onClick={() => handleAddToPortfolio(product)}
-                                                className="btn-secondary text-sm"
-                                            >
-                                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </td>
-                                    </tr>
-                                )
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredProducts.length === 0 && (
-                    <div className="text-center py-8 text-gray-400">
-                        No products found matching your criteria
-                    </div>
-                )}
-            </div>
-
-            {/* Add to Portfolio Modal */}
-            {showAddModal && selectedProduct && (
-                <AddToPortfolioModal
-                    product={selectedProduct}
-                    onClose={() => {
-                        setShowAddModal(false);
-                        setSelectedProduct(null);
-                    }}
-                />
-            )}
-        </>
+      <div className="ea-card" style={{ padding: 60, textAlign: 'center', color: 'var(--text-3)' }}>
+        Loading market data…
+      </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="ea-card" style={{ padding: 24, textAlign: 'center', color: '#ff8b8b' }}>
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ea-card ea-card-hero" style={{ overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 18, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h2 className="ea-h2">Market Overview</h2>
+            <span className="ea-mono-label" style={{ padding: '3px 8px', borderRadius: 999, background: 'var(--surface-1)', border: '1px solid var(--border-1)' }}>
+              {filtered.length} products · {totalSelected} included
+            </span>
+          </div>
+          <p style={{ color: 'var(--text-3)', fontSize: 13, margin: '6px 0 0' }}>
+            Aggregated flexible-earn APRs across 5 exchanges. Click an exchange to compare tiers.
+          </p>
+        </div>
+        <div style={{ position: 'relative' }}>
+          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-4)' }}>
+            <Icon name="search" size={14} />
+          </span>
+          <input
+            type="text"
+            placeholder="Search exchanges"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="ea-input"
+            style={{ paddingLeft: 30, width: 180, fontSize: 13 }}
+          />
+        </div>
+      </div>
+
+      {/* Asset filter chips */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+        {(['ALL', 'USDT', 'USDC', 'BTC', 'ETH', 'SOL'] as AssetFilter[]).map(a => (
+          <button
+            key={a}
+            className={`ea-chip${assetFilter === a ? ' ea-chip-active' : ''}`}
+            onClick={() => setAssetFilter(a)}
+          >
+            {a === 'ALL' ? 'All assets' : a}
+          </button>
+        ))}
+      </div>
+
+      {/* Table */}
+      <div style={{ overflowX: 'auto', margin: '0 -10px' }}>
+        <table className="ea-table">
+          <thead>
+            <tr>
+              <th style={{ width: 32, paddingLeft: 14 }}>
+                <input
+                  type="checkbox"
+                  className="ea-check"
+                  checked={products.length > 0 && totalSelected === products.length}
+                  onChange={e => onToggleAll(e.target.checked)}
+                />
+              </th>
+              <SortableHeader label="Exchange" col="exchange" sortBy={sortBy} sortOrder={sortOrder} onClick={handleSort} />
+              <SortableHeader label="Asset" col="asset" sortBy={sortBy} sortOrder={sortOrder} onClick={handleSort} />
+              <SortableHeader label="Max APR" col="apr" sortBy={sortBy} sortOrder={sortOrder} onClick={handleSort} align="right" />
+              <th>Tier curve</th>
+              <th>Updated</th>
+              <th style={{ textAlign: 'right', paddingRight: 14 }}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(product => {
+              const key = getProductKey(product);
+              const selected = selectedProductKeys.has(key);
+              const maxApr = getMaxApr(product.subscriptions);
+              const bonus = product.subscriptions.find(s => s.type === 'bonus');
+              return (
+                <tr key={key} className={selected ? '' : 'is-muted'}>
+                  <td style={{ paddingLeft: 14 }}>
+                    <input
+                      type="checkbox"
+                      className="ea-check"
+                      checked={selected}
+                      onChange={() => onToggleProduct(key)}
+                    />
+                  </td>
+                  <td>
+                    <button
+                      onClick={() => onOpenDetail?.(product)}
+                      style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
+                      title="View exchange detail"
+                    >
+                      <ExchangeMark name={product.name} size={32} />
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 14 }}>{capitalizeExchange(product.name)}</div>
+                        <div className="ea-mono-label" style={{ marginTop: 2 }}>
+                          {product.subscriptions.length} tier{product.subscriptions.length > 1 ? 's' : ''}
+                          {bonus ? <> · <span style={{ color: '#f6d36a' }}>bonus</span></> : null}
+                        </div>
+                      </div>
+                    </button>
+                  </td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <AssetCoin asset={product.asset} size={22} />
+                      <span className="ea-num" style={{ fontSize: 13, fontWeight: 600 }}>{product.asset}</span>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    <span className="ea-apr-pill ea-accent-glow">{formatAPR(maxApr)}</span>
+                  </td>
+                  <td>
+                    <TierStrip subs={product.subscriptions} aprCeiling={aprCeiling} asset={product.asset} />
+                  </td>
+                  <td style={{ color: 'var(--text-3)', fontSize: 12, whiteSpace: 'nowrap' }} className="ea-num">
+                    {getRelativeTime(product.updatedAt)}
+                  </td>
+                  <td style={{ textAlign: 'right', paddingRight: 14 }}>
+                    <button
+                      className="ea-btn"
+                      onClick={() => onAddPortfolio?.(product)}
+                    >
+                      <Icon name="plus" size={12} />
+                      Track
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {filtered.length === 0 && (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-3)' }}>
+          No products match your filters.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SortableHeader({ label, col, sortBy, sortOrder, onClick, align = 'left' }: {
+  label: string; col: SortBy; sortBy: SortBy; sortOrder: SortOrder;
+  onClick: (col: SortBy) => void; align?: 'left' | 'right';
+}) {
+  const active = sortBy === col;
+  return (
+    <th onClick={() => onClick(col)} style={{ cursor: 'pointer', textAlign: align, userSelect: 'none' }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: active ? 'var(--text-1)' : undefined }}>
+        {label}
+        <span style={{ opacity: active ? 1 : 0.3, fontSize: 9 }}>{active && sortOrder === 'asc' ? '▲' : '▼'}</span>
+      </span>
+    </th>
+  );
 }

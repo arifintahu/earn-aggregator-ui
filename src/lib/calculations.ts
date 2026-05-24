@@ -285,8 +285,20 @@ export function calculatePortfolioMetrics(
 }
 
 /**
+ * Format USD amount as a compact string: $1.23k, $1.23M, etc.
+ */
+export function formatUSDCompact(n: number): string {
+  if (!isFinite(n)) return '$0';
+  if (Math.abs(n) >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'k';
+  if (Math.abs(n) >= 1) return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  return '$' + n.toFixed(4);
+}
+
+/**
  * Capitalize exchange name
  */
 export function capitalizeExchange(name: string): string {
+    if (name.toLowerCase() === 'mexc') return 'MEXC';
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
