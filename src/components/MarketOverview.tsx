@@ -247,11 +247,7 @@ export default function MarketOverview({
               }}
             >
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-                <button
-                  onClick={() => onOpenDetail?.(product)}
-                  style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}
-                  title="View exchange detail"
-                >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
                   <ExchangeMark name={product.name} size={30} />
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 600, fontSize: 14 }}>{capitalizeExchange(product.name)}</div>
@@ -260,7 +256,7 @@ export default function MarketOverview({
                       {bonus ? <> · <span style={{ color: '#f6d36a' }}>bonus</span></> : null}
                     </div>
                   </div>
-                </button>
+                </div>
                 <input
                   type="checkbox"
                   className="ea-check"
@@ -285,7 +281,7 @@ export default function MarketOverview({
               </div>
 
               <div style={{ marginTop: 12 }}>
-                <div className="ea-mono-label" style={{ marginBottom: 6 }}>Tier curve</div>
+                <div className="ea-mono-label" style={{ marginBottom: 6 }}>APR by tier</div>
                 <TierStrip subs={product.subscriptions} aprCeiling={aprCeiling} asset={product.asset} />
               </div>
 

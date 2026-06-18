@@ -27,7 +27,7 @@ export function TierStrip({ subs, aprCeiling, asset }: TierStripProps) {
               className="ea-tier-label"
               style={{ color: isBonus ? '#f6d36a' : undefined }}
             >
-              {(s.apr * 100).toFixed(2)}%
+              {parseFloat((s.apr * 100).toFixed(2))}%
             </span>
             <div
               className="ea-tier-block"
