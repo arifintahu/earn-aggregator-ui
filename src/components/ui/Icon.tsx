@@ -34,6 +34,7 @@ export function Icon({ name, size = 16, stroke = 'currentColor' }: IconProps) {
     case 'bell':          return <svg {...common}><path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>;
     case 'columns':       return <svg {...common}><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 3v18"/></svg>;
     case 'menu':          return <svg {...common}><path d="M4 6h16M4 12h16M4 18h16"/></svg>;
+    case 'eye':           return <svg {...common}><circle cx="12" cy="12" r="3"/><path d="M2 12c2-5 5-8 10-8s8 3 10 8-5 8-10 8-8-3-10-8z"/></svg>;
     default:              return null;
   }
 }
