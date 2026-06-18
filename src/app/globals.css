@@ -222,8 +222,10 @@ body {
 }
 
 /* Tier strip */
-.ea-tier-strip { display: flex; gap: 3px; align-items: stretch; height: 24px; min-width: 120px; }
-.ea-tier-block { flex: 1; border-radius: 4px; background: var(--surface-2); position: relative; overflow: hidden; cursor: help; }
+.ea-tier-strip { display: flex; gap: 3px; align-items: flex-end; min-width: 120px; }
+.ea-tier-col { display: flex; flex-direction: column; align-items: stretch; gap: 3px; flex: 1; }
+.ea-tier-label { font-size: 10px; line-height: 1; color: var(--text-3); text-align: center; }
+.ea-tier-block { height: 32px; border-radius: 4px; background: var(--surface-2); position: relative; overflow: hidden; cursor: help; }
 .ea-tier-block .ea-tier-fill { position: absolute; inset: 0; border-radius: inherit; }
 
 /* Checkbox */
