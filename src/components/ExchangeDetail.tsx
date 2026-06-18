@@ -291,23 +291,15 @@ export default function ExchangeDetail({
     [thisProducts]
   );
 
-  const [selectedAsset, setSelectedAsset] = useState<AssetSymbol>(
-    assets[0] ?? 'USDT'
-  );
-
-  // Keep selectedAsset valid if assets change
-  useEffect(() => {
-    if (assets.length > 0 && !assets.includes(selectedAsset)) {
-      setSelectedAsset(assets[0]);
-    }
-  }, [assets, selectedAsset]);
+  const [selectedAsset, setSelectedAsset] = useState<AssetSymbol | null>(null);
+  const activeAsset = selectedAsset && assets.includes(selectedAsset) ? selectedAsset : (assets[0] ?? 'USDT');
 
   const selectedProduct = useMemo(
-    () => thisProducts.find((p) => p.asset === selectedAsset),
-    [thisProducts, selectedAsset]
+    () => thisProducts.find((p) => p.asset === activeAsset),
+    [thisProducts, activeAsset]
   );
 
-  const subs = selectedProduct?.subscriptions ?? [];
+  const subs = useMemo(() => selectedProduct?.subscriptions ?? [], [selectedProduct]);
   const sortedSubs = useMemo(
     () => [...subs].sort((a, b) => a.tier.min - b.tier.min),
     [subs]
@@ -342,13 +334,14 @@ export default function ExchangeDetail({
   const bonusCapValue = useMemo(() => {
     if (!bonusSub) return '—';
     if (bonusSub.tier.max === -1) return '∞';
-    if (isStablecoin(selectedAsset)) {
+    if (isStablecoin(activeAsset)) {
       return `$${bonusSub.tier.max.toLocaleString()}`;
     }
-    return `${bonusSub.tier.max} ${selectedAsset}`;
-  }, [bonusSub, selectedAsset]);
+    return `${bonusSub.tier.max} ${activeAsset}`;
+  }, [bonusSub, activeAsset]);
 
   const baseAprValue = baseSub ? `${formatAPR(baseSub.apr * 100)}%` : '—';
+  const panelPadding = 'clamp(16px, 4vw, 28px)';
 
   return (
     <div
@@ -362,11 +355,11 @@ export default function ExchangeDetail({
         style={{
           position: 'relative',
           background: 'var(--bg-1)',
-          margin: '24px auto',
-          borderRadius: 'var(--radius-1)',
+          margin: 'clamp(12px, 4vw, 24px) auto',
+          borderRadius: 'clamp(14px, 3vw, 18px)',
           maxWidth: 900,
           width: '100%',
-          maxHeight: 'calc(100vh - 48px)',
+          maxHeight: 'calc(100dvh - 24px)',
           overflow: 'hidden auto',
           boxShadow: '0 32px 64px rgba(0,0,0,0.6)',
           animation: 'ea-pop 200ms cubic-bezier(0.22,1.2,0.36,1)',
@@ -394,11 +387,12 @@ export default function ExchangeDetail({
           style={{
             position: 'relative',
             zIndex: 1,
-            padding: '24px 28px 20px',
+            padding: `${panelPadding} ${panelPadding} 20px`,
             borderBottom: '1px solid var(--border-1)',
             display: 'flex',
             alignItems: 'flex-start',
             gap: 16,
+            flexWrap: 'wrap',
           }}
         >
           {/* Back button */}
@@ -454,7 +448,7 @@ export default function ExchangeDetail({
           <button
             className="ea-btn ea-btn-ghost"
             onClick={onClose}
-            style={{ padding: '6px 8px', flexShrink: 0 }}
+            style={{ padding: '6px 8px', flexShrink: 0, marginLeft: 'auto' }}
             aria-label="Close"
           >
             <Icon name="close" size={18} />
@@ -466,7 +460,7 @@ export default function ExchangeDetail({
           style={{
             position: 'relative',
             zIndex: 1,
-            padding: '14px 28px',
+            padding: `14px ${panelPadding}`,
             borderBottom: '1px solid var(--border-1)',
             display: 'flex',
             alignItems: 'center',
@@ -477,7 +471,7 @@ export default function ExchangeDetail({
           {assets.map((asset) => {
             const product = thisProducts.find((p) => p.asset === asset);
             const apr = product ? getMaxApr(product.subscriptions) : 0;
-            const isActive = asset === selectedAsset;
+            const isActive = asset === activeAsset;
             return (
               <button
                 key={asset}
@@ -499,19 +493,19 @@ export default function ExchangeDetail({
           style={{
             position: 'relative',
             zIndex: 1,
-            padding: '20px 28px 28px',
+            padding: `20px ${panelPadding} ${panelPadding}`,
             display: 'grid',
-            gridTemplateColumns: '1.4fr 1fr',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
             gap: 16,
           }}
         >
           {/* Left column: Tier Curve */}
-          <div className="ea-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="ea-card" style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
             <h2 className="ea-h2" style={{ margin: 0 }}>Tier Curve</h2>
 
             {/* SVG Chart */}
             {selectedProduct && sortedSubs.length > 0 ? (
-              <TierCurveChart subs={sortedSubs} asset={selectedAsset} />
+              <TierCurveChart subs={sortedSubs} asset={activeAsset} />
             ) : (
               <div
                 style={{
@@ -532,7 +526,7 @@ export default function ExchangeDetail({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <p className="ea-mono-label" style={{ marginBottom: 4 }}>Tier Ladder</p>
                 {sortedSubs.map((sub) => (
-                  <TierRow key={`${sub.type}-${sub.tier.min}`} sub={sub} asset={selectedAsset} />
+                  <TierRow key={`${sub.type}-${sub.tier.min}`} sub={sub} asset={activeAsset} />
                 ))}
               </div>
             )}
@@ -545,19 +539,19 @@ export default function ExchangeDetail({
                 style={{ marginTop: 4 }}
               >
                 <Icon name="plus" size={14} stroke="#04140d" />
-                Track {selectedAsset}
+                Track {activeAsset}
               </button>
             )}
           </div>
 
           {/* Right column: Compare + Stats */}
-          <div className="ea-card" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="ea-card" style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
             <h2 className="ea-h2" style={{ margin: 0 }}>Vs. Other Exchanges</h2>
 
             <ExchangeCompareBars
               allProducts={allProducts}
               currentExchange={exchangeLower}
-              asset={selectedAsset}
+              asset={activeAsset}
             />
 
             <div className="ea-divider" style={{ margin: '4px 0' }} />
@@ -566,7 +560,7 @@ export default function ExchangeDetail({
             <div
               style={{
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                 gap: 8,
               }}
             >

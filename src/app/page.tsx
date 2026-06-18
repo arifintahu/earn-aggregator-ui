@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useEarnProducts } from '@/hooks/useEarnProducts';
 import { useApiHealth } from '@/hooks/useApiHealth';
 import { usePrices } from '@/context/PriceContext';
-import { usePortfolio } from '@/context/PortfolioContext';
 import MarketOverview from '@/components/MarketOverview';
 import YieldSimulator from '@/components/YieldSimulator';
 import PortfolioTracker from '@/components/PortfolioTracker';
@@ -24,26 +23,27 @@ export default function Home() {
   const { products, loading, error } = useEarnProducts();
   const apiHealth = useApiHealth();
   const { prices } = usePrices();
-  const { addPosition } = usePortfolio();
 
-  const [selectedProductKeys, setSelectedProductKeys] = useState<Set<string>>(new Set());
+  const [selectedProductKeys, setSelectedProductKeys] = useState<Set<string> | null>(null);
   const [modalProduct, setModalProduct] = useState<EarnProduct | null>(null);
   const [detailExchange, setDetailExchange] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('market');
 
   const getProductKey = (product: { name: string; asset: string }) =>
     `${product.name}-${product.asset}`;
-
-  useEffect(() => {
-    if (products.length > 0 && selectedProductKeys.size === 0) {
-      setSelectedProductKeys(new Set(products.map(getProductKey)));
-    }
-  }, [products]);
+  const activeSelectedProductKeys = useMemo(
+    () => selectedProductKeys ?? new Set(products.map(getProductKey)),
+    [products, selectedProductKeys]
+  );
 
   const toggleProductSelection = (key: string) => {
     setSelectedProductKeys(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
+      const next = new Set(prev ?? products.map(getProductKey));
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
       return next;
     });
   };
@@ -53,8 +53,8 @@ export default function Home() {
   };
 
   const selectedProducts = useMemo(
-    () => products.filter(p => selectedProductKeys.has(getProductKey(p))),
-    [products, selectedProductKeys]
+    () => products.filter(p => activeSelectedProductKeys.has(getProductKey(p))),
+    [products, activeSelectedProductKeys]
   );
 
   // Top-rate product for hero card
@@ -62,6 +62,7 @@ export default function Home() {
     () => products.length ? [...products].sort((a, b) => getMaxApr(b.subscriptions) - getMaxApr(a.subscriptions))[0] : null,
     [products]
   );
+  const shellPaddingX = 'clamp(16px, 4vw, 32px)';
 
   return (
     <div className="ea-shell" style={{ minHeight: '100vh', position: 'relative' }}>
@@ -73,7 +74,7 @@ export default function Home() {
         WebkitBackdropFilter: 'blur(18px) saturate(1.4)',
         borderBottom: '1px solid var(--border-1)',
       }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto', padding: '14px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+        <div style={{ maxWidth: 1400, margin: '0 auto', padding: `14px ${shellPaddingX}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <Logomark size={28} />
@@ -131,7 +132,7 @@ export default function Home() {
       </header>
 
       {/* ── Main ──────────────────────────────────────────────── */}
-      <main style={{ position: 'relative', maxWidth: 1400, margin: '0 auto', padding: '24px 32px 120px' }}>
+      <main style={{ position: 'relative', maxWidth: 1400, margin: '0 auto', padding: `24px ${shellPaddingX} 120px` }}>
         {/* Hero heading (desktop only) */}
         <div className="ea-desktop-only ea-page-heading-grid" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 'var(--gap-1)', marginBottom: 'var(--gap-1)' }}>
           {/* Left: title card */}
@@ -191,7 +192,7 @@ export default function Home() {
               products={products}
               loading={loading}
               error={error}
-              selectedProductKeys={selectedProductKeys}
+              selectedProductKeys={activeSelectedProductKeys}
               onToggleProduct={toggleProductSelection}
               onToggleAll={toggleAllProducts}
               getProductKey={getProductKey}
@@ -212,7 +213,7 @@ export default function Home() {
               products={products}
               loading={loading}
               error={error}
-              selectedProductKeys={selectedProductKeys}
+              selectedProductKeys={activeSelectedProductKeys}
               onToggleProduct={toggleProductSelection}
               onToggleAll={toggleAllProducts}
               getProductKey={getProductKey}
@@ -227,7 +228,7 @@ export default function Home() {
 
       {/* ── Footer ────────────────────────────────────────────── */}
       <footer className="ea-desktop-only" style={{
-        maxWidth: 1400, margin: '0 auto', padding: '24px 32px',
+        maxWidth: 1400, margin: '0 auto', padding: `24px ${shellPaddingX}`,
         borderTop: '1px solid var(--border-1)',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         color: 'var(--text-3)', fontSize: 12,
