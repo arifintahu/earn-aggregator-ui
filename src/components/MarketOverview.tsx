@@ -91,7 +91,7 @@ export default function MarketOverview({
             </span>
           </div>
           <p style={{ color: 'var(--text-3)', fontSize: 13, margin: '6px 0 0' }}>
-            Aggregated flexible-earn APRs across 5 exchanges. Click an exchange to compare tiers.
+            Aggregated flexible-earn APRs across 5 exchanges. Click Detail to compare tiers.
           </p>
         </div>
         <div style={{ position: 'relative' }}>
@@ -191,13 +191,22 @@ export default function MarketOverview({
                     {getRelativeTime(product.updatedAt)}
                   </td>
                   <td style={{ textAlign: 'right', paddingRight: 14 }}>
-                    <button
-                      className="ea-btn"
-                      onClick={() => onAddPortfolio?.(product)}
-                    >
-                      <Icon name="plus" size={12} />
-                      Track
-                    </button>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                      <button
+                        className="ea-btn ea-btn-ghost"
+                        onClick={() => onOpenDetail?.(product)}
+                      >
+                        <Icon name="eye" size={12} />
+                        Detail
+                      </button>
+                      <button
+                        className="ea-btn"
+                        onClick={() => onAddPortfolio?.(product)}
+                      >
+                        <Icon name="plus" size={12} />
+                        Track
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -209,7 +218,7 @@ export default function MarketOverview({
       {/* Mobile cards */}
       <div className="ea-mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 2 }}>
-          <div className="ea-mono-label">Tap any exchange for details</div>
+          <div className="ea-mono-label">Tap Detail to view tier breakdown</div>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-3)', fontSize: 12 }}>
             <input
               type="checkbox"
@@ -284,13 +293,22 @@ export default function MarketOverview({
                 <div style={{ color: 'var(--text-3)', fontSize: 12 }} className="ea-num">
                   Updated {getRelativeTime(product.updatedAt)}
                 </div>
-                <button
-                  className="ea-btn"
-                  onClick={() => onAddPortfolio?.(product)}
-                >
-                  <Icon name="plus" size={12} />
-                  Track
-                </button>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button
+                    className="ea-btn ea-btn-ghost"
+                    onClick={() => onOpenDetail?.(product)}
+                  >
+                    <Icon name="eye" size={12} />
+                    Detail
+                  </button>
+                  <button
+                    className="ea-btn"
+                    onClick={() => onAddPortfolio?.(product)}
+                  >
+                    <Icon name="plus" size={12} />
+                    Track
+                  </button>
+                </div>
               </div>
             </div>
           );
