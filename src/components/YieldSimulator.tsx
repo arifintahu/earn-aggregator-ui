@@ -18,6 +18,8 @@ interface YieldSimulatorProps {
 export default function YieldSimulator({ products }: YieldSimulatorProps) {
   const [amount, setAmount] = useState('5000');
   const [showAll, setShowAll] = useState(false);
+  const [showAllAllocations, setShowAllAllocations] = useState(false);
+  const ALLOC_LIMIT = 3;
   const { prices } = usePrices();
   const numAmount = parseFloat(amount) || 0;
 
@@ -62,7 +64,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
         </div>
         <div>
           <h2 className="ea-h2">Yield Simulator</h2>
-          <div className="ea-mono-label">Optimal allocation across selected exchanges</div>
+          <div className="ea-mono-label">Best split across exchanges</div>
         </div>
       </div>
 
@@ -129,7 +131,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
           </div>
 
           {/* Reward grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
             <RewardStat label="Daily" value={formatUSDCompact(optimal.dailyReward)} />
             <RewardStat label="Monthly" value={formatUSDCompact(optimal.monthlyReward)} />
             <RewardStat label="Annual" value={formatUSDCompact(optimal.totalAnnualReturn)} />
@@ -144,10 +146,18 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {optimal.allocations.map((alloc, i) => (
+              {(showAllAllocations ? optimal.allocations : optimal.allocations.slice(0, ALLOC_LIMIT)).map((alloc, i) => (
                 <AllocationRow key={i} alloc={alloc} total={optimal.totalAmount} index={i} />
               ))}
             </div>
+            {optimal.allocations.length > ALLOC_LIMIT && (
+              <button
+                onClick={() => setShowAllAllocations(v => !v)}
+                style={{ all: 'unset', display: 'block', width: '100%', textAlign: 'center', cursor: 'pointer', marginTop: 8, padding: '6px 0', fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}
+              >
+                {showAllAllocations ? 'Show less ▲' : `Show all ${optimal.allocations.length} ▼`}
+              </button>
+            )}
           </div>
 
           {/* Single-exchange comparison */}

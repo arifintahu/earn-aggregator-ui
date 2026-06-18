@@ -44,8 +44,8 @@ export function CompositionDonut({ byAsset, total, size = 80 }: CompositionDonut
         position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center', color: 'var(--text-3)',
       }}>
-        <div style={{ fontSize: 8, fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>MIX</div>
         <div style={{ fontSize: 13, fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-1)' }}>{entries.length}</div>
+        <div style={{ fontSize: 7, fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', color: 'var(--text-3)', textTransform: 'uppercase' }}>asset{entries.length !== 1 ? 's' : ''}</div>
       </div>
     </div>
   );

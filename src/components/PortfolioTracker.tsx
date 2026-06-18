@@ -17,13 +17,15 @@ import { MetricChip } from '@/components/ui/MetricChip';
 
 interface PortfolioTrackerProps {
   products: EarnProduct[];
+  onBrowseMarket?: () => void;
 }
 
-export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
+export default function PortfolioTracker({ products, onBrowseMarket }: PortfolioTrackerProps) {
   const { positions, updatePosition, removePosition, clearPortfolio } = usePortfolio();
   const { prices } = usePrices();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editAmount, setEditAmount] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const metrics = useMemo(
     () => calculatePortfolioMetrics(positions, products, prices),
@@ -74,12 +76,25 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
           </div>
         </div>
         {positions.length > 0 && (
-          <button
-            onClick={clearPortfolio}
-            style={{ all: 'unset', color: 'var(--text-3)', fontSize: 12, cursor: 'pointer' }}
-          >
-            Clear all
-          </button>
+          !showClearConfirm ? (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="ea-btn ea-btn-ghost"
+              style={{ fontSize: 11, color: '#f87171', borderColor: 'rgba(248,113,113,0.3)', padding: '4px 10px' }}
+            >
+              Clear all
+            </button>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 11, color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>Sure?</span>
+              <button className="ea-btn ea-btn-ghost" style={{ fontSize: 11, padding: '3px 8px' }} onClick={() => setShowClearConfirm(false)}>No</button>
+              <button
+                className="ea-btn"
+                style={{ fontSize: 11, padding: '3px 8px', background: 'rgba(127,29,29,0.6)', borderColor: '#ef4444', color: '#fca5a5' }}
+                onClick={() => { clearPortfolio(); setShowClearConfirm(false); }}
+              >Yes</button>
+            </div>
+          )
         )}
       </div>
 
@@ -143,7 +158,7 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                         ) : (
                           <>
                             <div className="ea-num" style={{ fontSize: 13, fontWeight: 600 }}>{formatUSD(pos.amount)}</div>
-                            {y && <div className="ea-num" style={{ fontSize: 10, color: 'var(--accent-1)' }}>+{formatUSDCompact(y.dailyReward)}/d</div>}
+                            {y && <div className="ea-num" style={{ fontSize: 10, color: 'var(--accent-1)' }}>+{formatUSDCompact(y.dailyReward)}/day</div>}
                           </>
                         )}
                       </div>
@@ -168,18 +183,21 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
                       </button>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 4, marginTop: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border-1)' }}>
                       <button
-                        style={{ all: 'unset', padding: 4, color: 'var(--text-3)', cursor: 'pointer' }}
+                        className="ea-btn ea-btn-ghost"
                         onClick={() => { setEditingId(pos.id); setEditAmount(String(pos.amount)); }}
                       >
-                        <Icon name="edit" size={13} />
+                        <Icon name="edit" size={12} />
+                        Edit
                       </button>
                       <button
-                        style={{ all: 'unset', padding: 4, color: 'var(--text-3)', cursor: 'pointer' }}
+                        className="ea-btn ea-btn-ghost"
+                        style={{ color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
                         onClick={() => removePosition(pos.id)}
                       >
-                        <Icon name="trash" size={13} />
+                        <Icon name="trash" size={12} />
+                        Remove
                       </button>
                     </div>
                   )}
@@ -200,8 +218,14 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
           </div>
           <div style={{ fontSize: 14, fontWeight: 600 }}>Nothing tracked yet</div>
           <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4, maxWidth: 240, marginInline: 'auto' }}>
-            Click <strong>Track</strong> on any row in the Market Overview to add a position here.
+            Tap <strong>Track</strong> on any row to add a position here.
           </div>
+          {onBrowseMarket && (
+            <button className="ea-btn" onClick={onBrowseMarket} style={{ marginTop: 16 }}>
+              <Icon name="arrow-right" size={12} />
+              Browse Market
+            </button>
+          )}
         </div>
       )}
     </div>

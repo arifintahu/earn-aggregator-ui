@@ -38,8 +38,8 @@ export function AllocationDonut({ allocations, size = 100 }: AllocationDonutProp
           />
         );
       })}
-      <text x={cx} y={cy - 2} textAnchor="middle" fill="var(--text-3)" fontSize="8" fontFamily="var(--font-mono)" letterSpacing="0.1em">SPLIT</text>
-      <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-1)" fontSize="13" fontFamily="var(--font-mono)" fontWeight="700">{allocations.length}</text>
+      <text x={cx} y={cy + 5} textAnchor="middle" fill="var(--text-1)" fontSize="14" fontFamily="var(--font-mono)" fontWeight="700">{allocations.length}</text>
+      <text x={cx} y={cy + 17} textAnchor="middle" fill="var(--text-3)" fontSize="7" fontFamily="var(--font-mono)" letterSpacing="0.08em">EXCH</text>
     </svg>
   );
 }

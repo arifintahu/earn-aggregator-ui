@@ -222,7 +222,7 @@ export default function Home() {
             />
           )}
           {activeTab === 'simulator' && <YieldSimulator products={selectedProducts} />}
-          {activeTab === 'portfolio' && <PortfolioTracker products={products} />}
+          {activeTab === 'portfolio' && <PortfolioTracker products={products} onBrowseMarket={() => setActiveTab('market')} />}
         </div>
       </main>
 
