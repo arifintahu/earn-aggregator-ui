@@ -87,13 +87,13 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
         <>
           {/* Summary */}
           <div style={{
-            display: 'grid', gridTemplateColumns: '1fr auto', gap: 14,
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14,
             padding: '14px 0 16px', borderBottom: '1px dashed var(--border-1)', marginBottom: 12,
           }}>
             <div>
               <div className="ea-mono-label">Total Balance</div>
               <div className="ea-num-lg" style={{ marginTop: 4 }}>{formatUSD(metrics.totalBalance)}</div>
-              <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 11, color: 'var(--text-3)' }}>
+              <div style={{ display: 'flex', gap: 14, marginTop: 8, fontSize: 11, color: 'var(--text-3)', flexWrap: 'wrap' }}>
                 <span><span className="ea-num ea-accent">{formatAPR(metrics.weightedAvgApr)}%</span> avg APR</span>
                 <span>·</span>
                 <span><span className="ea-num ea-accent">+{formatUSDCompact(metrics.totalDailyIncome)}</span>/day</span>
@@ -118,7 +118,7 @@ export default function PortfolioTracker({ products }: PortfolioTrackerProps) {
               const usdValue = isCrypto ? nativeToUsd(pos.amount, pos.asset, prices) : pos.amount;
               return (
                 <div key={pos.id} className="ea-inset" style={{ padding: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                       <ExchangeMark name={pos.exchange} size={28} />
                       <div style={{ minWidth: 0 }}>

@@ -312,5 +312,7 @@ body {
   .ea-sidebar { display: none; }
   .ea-num-xl { font-size: 36px; }
   .ea-page-heading-grid { grid-template-columns: 1fr !important; }
+  .ea-card { padding: 18px; }
+  .ea-modal-backdrop { padding: 12px; }
 }
 .ea-mobile-only { display: none; }

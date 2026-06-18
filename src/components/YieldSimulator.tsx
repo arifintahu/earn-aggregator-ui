@@ -108,7 +108,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
             background: 'radial-gradient(180px 100px at 0% 0%, color-mix(in oklch, var(--accent-1) 26%, transparent), transparent 70%)',
             border: '1px solid color-mix(in oklch, var(--accent-1) 24%, transparent)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
               <div>
                 <div className="ea-mono-label" style={{ color: 'var(--accent-1)' }}>Combined Effective APR</div>
                 <div className="ea-num-xl ea-accent-glow" style={{ marginTop: 4 }}>
@@ -129,7 +129,7 @@ export default function YieldSimulator({ products }: YieldSimulatorProps) {
           </div>
 
           {/* Reward grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 8, marginBottom: 16 }}>
             <RewardStat label="Daily" value={formatUSDCompact(optimal.dailyReward)} />
             <RewardStat label="Monthly" value={formatUSDCompact(optimal.monthlyReward)} />
             <RewardStat label="Annual" value={formatUSDCompact(optimal.totalAnnualReturn)} />
@@ -196,7 +196,7 @@ function AllocationRow({ alloc, total, index }: { alloc: AllocationSlot; total: 
         background: `linear-gradient(90deg, ${meta?.color ?? 'var(--accent-1)'}30 0%, transparent 100%)`,
         pointerEvents: 'none',
       }} />
-      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
           <span className="ea-mono-label" style={{ width: 14, color: 'var(--text-4)' }}>{index + 1}</span>
           <ExchangeMark name={alloc.exchange} size={26} />
@@ -227,7 +227,7 @@ function AllocationRow({ alloc, total, index }: { alloc: AllocationSlot; total: 
 function SingleRow({ result, rank }: { result: ExchangeYieldResult; rank: number }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap',
       padding: '8px 10px', borderRadius: 8,
       background: rank === 1 ? 'color-mix(in oklch, var(--accent-1) 10%, transparent)' : 'var(--surface-1)',
       border: rank === 1 ? '1px solid color-mix(in oklch, var(--accent-1) 25%, transparent)' : '1px solid var(--border-1)',

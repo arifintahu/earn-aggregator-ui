@@ -5,7 +5,7 @@ import { EarnProduct } from '@/types';
 import { getMaxApr, formatAPR, getRelativeTime, capitalizeExchange } from '@/lib/calculations';
 import { Icon } from '@/components/ui/Icon';
 import { ExchangeMark } from '@/components/ui/ExchangeMark';
-import { AssetCoin, AssetBadge } from '@/components/ui/AssetBadge';
+import { AssetCoin } from '@/components/ui/AssetBadge';
 import { TierStrip } from '@/components/ui/TierStrip';
 
 interface MarketOverviewProps {
@@ -104,7 +104,7 @@ export default function MarketOverview({
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="ea-input"
-            style={{ paddingLeft: 30, width: 180, fontSize: 13 }}
+            style={{ paddingLeft: 30, width: 'min(100%, 220px)', fontSize: 13 }}
           />
         </div>
       </div>
@@ -122,8 +122,8 @@ export default function MarketOverview({
         ))}
       </div>
 
-      {/* Table */}
-      <div style={{ overflowX: 'auto', margin: '0 -10px' }}>
+      {/* Desktop table */}
+      <div className="ea-desktop-only" style={{ overflowX: 'auto', margin: '0 -10px' }}>
         <table className="ea-table">
           <thead>
             <tr>
@@ -204,6 +204,97 @@ export default function MarketOverview({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="ea-mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 2 }}>
+          <div className="ea-mono-label">Tap any exchange for details</div>
+          <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-3)', fontSize: 12 }}>
+            <input
+              type="checkbox"
+              className="ea-check"
+              checked={products.length > 0 && totalSelected === products.length}
+              onChange={e => onToggleAll(e.target.checked)}
+            />
+            Include all
+          </label>
+        </div>
+        {filtered.map(product => {
+          const key = getProductKey(product);
+          const selected = selectedProductKeys.has(key);
+          const maxApr = getMaxApr(product.subscriptions);
+          const bonus = product.subscriptions.find(s => s.type === 'bonus');
+          return (
+            <div
+              key={key}
+              className="ea-inset"
+              style={{
+                padding: 12,
+                opacity: selected ? 1 : 0.6,
+                borderColor: selected
+                  ? 'color-mix(in oklch, var(--accent-1) 24%, var(--border-1))'
+                  : undefined,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                <button
+                  onClick={() => onOpenDetail?.(product)}
+                  style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}
+                  title="View exchange detail"
+                >
+                  <ExchangeMark name={product.name} size={30} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{capitalizeExchange(product.name)}</div>
+                    <div className="ea-mono-label" style={{ marginTop: 2 }}>
+                      {product.subscriptions.length} tier{product.subscriptions.length > 1 ? 's' : ''}
+                      {bonus ? <> · <span style={{ color: '#f6d36a' }}>bonus</span></> : null}
+                    </div>
+                  </div>
+                </button>
+                <input
+                  type="checkbox"
+                  className="ea-check"
+                  checked={selected}
+                  onChange={() => onToggleProduct(key)}
+                  aria-label={`Include ${capitalizeExchange(product.name)} ${product.asset}`}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10, marginTop: 12 }}>
+                <div>
+                  <div className="ea-mono-label" style={{ marginBottom: 6 }}>Asset</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <AssetCoin asset={product.asset} size={22} />
+                    <span className="ea-num" style={{ fontSize: 13, fontWeight: 600 }}>{product.asset}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="ea-mono-label" style={{ marginBottom: 6 }}>Max APR</div>
+                  <span className="ea-apr-pill ea-accent-glow">{formatAPR(maxApr)}</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12 }}>
+                <div className="ea-mono-label" style={{ marginBottom: 6 }}>Tier curve</div>
+                <TierStrip subs={product.subscriptions} aprCeiling={aprCeiling} asset={product.asset} />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 12, flexWrap: 'wrap' }}>
+                <div style={{ color: 'var(--text-3)', fontSize: 12 }} className="ea-num">
+                  Updated {getRelativeTime(product.updatedAt)}
+                </div>
+                <button
+                  className="ea-btn"
+                  onClick={() => onAddPortfolio?.(product)}
+                >
+                  <Icon name="plus" size={12} />
+                  Track
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {filtered.length === 0 && (
