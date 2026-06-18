@@ -216,7 +216,7 @@ export default function MarketOverview({
       </div>
 
       {/* Mobile cards */}
-      <div className="ea-mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="ea-mobile-only" style={{ flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 2 }}>
           <div className="ea-mono-label">Tap Detail to view tier breakdown</div>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--text-3)', fontSize: 12 }}>

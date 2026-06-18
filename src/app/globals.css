@@ -307,7 +307,7 @@ body {
 @media (max-width: 768px) {
   .ea-tab-bar { display: grid; }
   .ea-desktop-only { display: none !important; }
-  .ea-mobile-only { display: block !important; }
+  .ea-mobile-only { display: flex !important; }
   .ea-main-grid {
     grid-template-columns: 1fr !important;
   }
